@@ -1106,9 +1106,30 @@ function closeMeetingFolderView(){
   updateCategoryCounts();
 }
 
+function meetingMatchesCategory(m, cat){
+  if(cat==='all' || cat==='minutes') return true;
+  if(cat==='changes') return !!(m.changes && m.changes.trim()) || (m.changesFiles && m.changesFiles.length>0);
+  if(cat==='plan') return !!(m.plan && m.plan.replace(/<[^>]+>/g,'').trim()) || (m.planFiles && m.planFiles.length>0);
+  if(cat==='photos') return !!(m.photos && m.photos.length>0) || (m.photosFiles && m.photosFiles.length>0);
+  if(cat==='report') return !!(m.report && m.report.replace(/<[^>]+>/g,'').trim()) || (m.reportFiles && m.reportFiles.length>0);
+  return true;
+}
+
 function renderMeetingsFolders(){
   const grid=document.getElementById('meetingsFolderGrid'); grid.innerHTML='';
-  appData.meetings.forEach((m,i)=>{
+  const filtered = appData.meetings
+    .map((m,i)=>({m,i}))
+    .filter(({m})=>meetingMatchesCategory(m, currentMeetingCategory));
+
+  if(filtered.length===0){
+    grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:48px 0;color:var(--gray-400);">
+      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 12px;display:block;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+      <div style="font-size:14px;">이 카테고리에 등록된 문서가 없습니다.</div>
+    </div>`;
+    return;
+  }
+
+  filtered.forEach(({m,i})=>{
     const div=document.createElement('div'); div.className='meeting-folder';
     div.innerHTML=`
       <div class="meeting-folder-icon"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></div>
