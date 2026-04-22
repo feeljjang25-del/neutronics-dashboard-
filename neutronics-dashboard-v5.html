@@ -1,0 +1,1589 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>뉴트로닉스 프로젝트 대시보드 v5</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --indigo-50:#eef2ff;--indigo-100:#e0e7ff;--indigo-200:#c7d2fe;--indigo-300:#a5b4fc;
+  --indigo-400:#818cf8;--indigo-500:#6366f1;--indigo-600:#4f46e5;--indigo-700:#4338ca;
+  --orange-500:#f97316;--orange-600:#ea580c;--orange-700:#c2410c;
+  --emerald-500:#10b981;--emerald-600:#059669;--emerald-700:#047857;
+  --amber-500:#f59e0b;
+  --gray-50:#f9fafb;--gray-100:#f3f4f6;--gray-200:#e5e7eb;--gray-300:#d1d5db;
+  --gray-400:#9ca3af;--gray-500:#6b7280;--gray-600:#4b5563;--gray-700:#374151;
+  --gray-800:#1f2937;--gray-900:#111827;
+  --cream-bg:#fafaf8;
+  --sidebar-dark:oklch(0.22 0.04 265);--sidebar-hover:oklch(0.32 0.04 265);
+  --font-main:'Noto Sans KR',sans-serif;--font-mono:'JetBrains Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:var(--font-main);background:var(--cream-bg);color:var(--gray-800);overflow:hidden;font-size:14px;}
+.mono{font-family:var(--font-mono);}
+.dashboard{display:flex;height:100vh;}
+
+/* ── Sidebar ── */
+.sidebar{width:260px;background:var(--sidebar-dark);display:flex;flex-direction:column;box-shadow:4px 0 12px rgba(0,0,0,.1);z-index:10;}
+.sidebar-header{padding:20px;border-bottom:1px solid var(--sidebar-hover);display:flex;align-items:center;gap:12px;}
+.logo{width:36px;height:36px;background:var(--indigo-500);border-radius:12px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 8px rgba(99,102,241,.3);}
+.logo svg{width:18px;height:18px;stroke:#fff;fill:none;}
+.brand h1{color:#fff;font-size:16px;font-weight:700;line-height:1.2;}
+.brand p{color:var(--indigo-300);font-size:11px;margin-top:2px;}
+.nav{flex:1;padding:16px 12px;overflow-y:auto;}
+.nav-label{color:var(--indigo-400);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;padding:0 12px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;color:var(--indigo-100);font-size:14px;border-radius:8px;cursor:pointer;transition:all .15s;margin-bottom:4px;}
+.nav-item:hover{background:var(--sidebar-hover);}
+.nav-item.active{background:var(--sidebar-hover);color:#fff;}
+.nav-item svg{width:18px;height:18px;stroke:currentColor;fill:none;flex-shrink:0;}
+.sidebar-footer{padding:16px;border-top:1px solid var(--sidebar-hover);color:var(--indigo-400);font-size:11px;}
+.sidebar-footer-title{color:var(--indigo-300);font-weight:600;margin-bottom:6px;font-size:12px;}
+
+/* ── Main ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.header{background:#fff;border-bottom:1px solid var(--gray-200);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+.header-left h2{font-size:20px;font-weight:700;color:var(--gray-900);margin-bottom:4px;}
+.breadcrumb{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray-500);}
+.header-right{display:flex;gap:12px;align-items:center;}
+.btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;border:none;font-family:var(--font-main);display:inline-flex;align-items:center;gap:6px;}
+.btn-primary{background:var(--indigo-600);color:#fff;}
+.btn-primary:hover{background:var(--indigo-700);transform:translateY(-1px);box-shadow:0 4px 12px rgba(79,70,229,.3);}
+.btn-secondary{background:#fff;color:var(--gray-700);border:1px solid var(--gray-300);}
+.btn-secondary:hover{background:var(--gray-50);}
+.content{flex:1;overflow-y:auto;padding:24px;}
+.container{max-width:1200px;margin:0 auto;}
+
+/* ── Banner ── */
+.banner{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);border-radius:16px;padding:48px;margin-bottom:32px;position:relative;overflow:hidden;box-shadow:0 8px 24px rgba(102,126,234,.2);}
+.banner::before{content:'';position:absolute;top:0;right:0;width:400px;height:400px;background:radial-gradient(circle,rgba(255,255,255,.1) 0%,transparent 70%);border-radius:50%;transform:translate(30%,-30%);}
+.banner-content{position:relative;z-index:1;}
+.banner h1{color:#fff;font-size:32px;font-weight:700;margin-bottom:12px;}
+.banner p{color:rgba(255,255,255,.9);font-size:16px;line-height:1.6;max-width:600px;}
+
+/* ── Cards ── */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-bottom:32px;}
+.card{background:#fff;border-radius:16px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.08);transition:all .3s cubic-bezier(.4,0,.2,1);border:1px solid var(--gray-100);}
+.card:hover{transform:translateY(-4px);box-shadow:0 8px 24px rgba(0,0,0,.12);}
+.card-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+.card-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;}
+.card-icon.indigo{background:var(--indigo-100);color:var(--indigo-600);}
+.card-icon.orange{background:#fed7aa;color:var(--orange-600);}
+.card-icon.emerald{background:#d1fae5;color:var(--emerald-600);}
+.card-icon.amber{background:#fef3c7;color:#92400e;}
+.card-icon.purple{background:#f3e8ff;color:#7c3aed;}
+.card-icon svg{width:24px;height:24px;stroke:currentColor;fill:none;}
+.card-title{color:var(--gray-600);font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
+.card-value{font-size:26px;font-weight:700;color:var(--gray-900);margin-bottom:8px;}
+.card-subtitle{color:var(--gray-500);font-size:13px;}
+
+/* ── Progress bar ── */
+.progress-bar{width:100%;height:8px;background:var(--gray-100);border-radius:999px;overflow:hidden;margin-top:12px;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--indigo-500),var(--indigo-600));border-radius:999px;transition:width .5s ease-out;}
+
+/* ── Team ── */
+.team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:16px;margin-top:16px;}
+.team-member{background:#fff;border-radius:12px;padding:16px;text-align:center;border:1px solid var(--gray-100);transition:all .2s;position:relative;}
+.team-member:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08);}
+.avatar{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;overflow:hidden;}
+.avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.avatar.indigo{background:var(--indigo-100);color:#4338ca;}
+.avatar.orange{background:#fed7aa;color:#c2410c;}
+.avatar.emerald{background:#d1fae5;color:#065f46;}
+.avatar.purple{background:#e9d5ff;color:#7c3aed;}
+.avatar.pink{background:#fce7f3;color:#be185d;}
+.avatar.cyan{background:#cffafe;color:#0e7490;}
+.avatar-wrap{position:relative;width:64px;height:64px;margin:0 auto 12px;cursor:pointer;}
+.avatar-upload-overlay{position:absolute;inset:0;border-radius:50%;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .2s;}
+.avatar-wrap:hover .avatar-upload-overlay{opacity:1;}
+.avatar-upload-overlay svg{width:18px;height:18px;stroke:#fff;}
+.team-name{font-weight:600;color:var(--gray-900);margin-bottom:4px;font-size:14px;}
+.team-role{font-size:12px;color:var(--gray-500);}
+
+/* ── Tables ── */
+.table-container{background:#fff;border-radius:16px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.08);border:1px solid var(--gray-100);}
+.table-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;}
+.table-title{font-size:17px;font-weight:700;color:var(--gray-900);}
+table{width:100%;border-collapse:collapse;}
+thead th{text-align:left;padding:12px;border-bottom:2px solid var(--gray-200);font-size:11px;font-weight:600;color:var(--gray-600);text-transform:uppercase;letter-spacing:.05em;}
+tbody td{padding:13px 12px;border-bottom:1px solid var(--gray-100);font-size:13px;color:var(--gray-700);vertical-align:middle;}
+tbody tr:hover{background:var(--gray-50);}
+.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:600;}
+.badge.done{background:#d1fae5;color:var(--emerald-700);}
+.badge.progress{background:#dbeafe;color:#1e40af;}
+.badge.pending{background:#fee2e2;color:#991b1b;}
+
+/* ── Chart container ── */
+.chart-container{background:#fff;border-radius:16px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,.08);border:1px solid var(--gray-100);margin-top:24px;}
+
+/* ── Edit mode ── */
+.edit-alert{background:#fffbeb;border:1px solid #fbbf24;border-radius:12px;padding:16px;margin-bottom:24px;display:flex;align-items:start;gap:12px;}
+.edit-alert svg{width:20px;height:20px;stroke:#f59e0b;fill:none;flex-shrink:0;margin-top:2px;}
+.editable-field{padding:6px 10px;border:1px solid var(--gray-300);border-radius:6px;font-family:var(--font-main);font-size:13px;width:100%;transition:all .15s;}
+.editable-field:focus{outline:none;border-color:var(--indigo-500);box-shadow:0 0 0 3px rgba(99,102,241,.1);}
+.editable-field.display-mode{border:1px solid transparent;background:transparent;padding:0;}
+.editable-field.display-mode:hover{background:var(--gray-50);border-color:var(--gray-200);}
+
+/* ── Buttons ── */
+.add-row-btn,.delete-row-btn{padding:6px 12px;border:none;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;display:inline-flex;align-items:center;gap:4px;font-family:var(--font-main);}
+.add-row-btn{background:var(--indigo-600);color:#fff;}
+.add-row-btn:hover{background:var(--indigo-700);}
+.delete-row-btn{background:#fee2e2;color:#991b1b;}
+.delete-row-btn:hover{background:#fecaca;}
+.add-row-btn svg,.delete-row-btn svg{width:14px;height:14px;}
+
+/* ── Add menu form ── */
+.add-menu-form{background:rgba(99,102,241,.1);border:1px solid var(--indigo-400);border-radius:8px;padding:12px;margin-bottom:8px;}
+.add-menu-form input{width:100%;padding:8px 12px;border:1px solid var(--indigo-400);border-radius:6px;background:rgba(49,46,129,.3);color:#fff;font-size:13px;margin-bottom:8px;font-family:var(--font-main);}
+.add-menu-form input::placeholder{color:rgba(165,180,252,.6);}
+.add-menu-btns{display:flex;gap:8px;}
+.add-menu-btns button{flex:1;padding:8px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font-main);}
+.add-menu-btns .btn-confirm{background:var(--indigo-600);color:#fff;}
+.add-menu-btns .btn-cancel{background:rgba(49,46,129,.5);color:var(--indigo-300);}
+.delete-btn{opacity:0;transition:opacity .15s;cursor:pointer;padding:4px;border-radius:4px;margin-left:auto;}
+.delete-btn:hover{background:rgba(239,68,68,.2);}
+.delete-btn svg{width:14px;height:14px;stroke:#ef4444;}
+.nav-item:hover .delete-btn{opacity:1;}
+
+/* ── Meeting folder grid ── */
+.meetings-folder-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(195px,1fr));gap:16px;margin-top:8px;}
+.meeting-folder{background:#fff;border:1px solid var(--gray-200);border-radius:12px;padding:20px 16px;cursor:pointer;transition:all .2s;text-align:left;position:relative;}
+.meeting-folder:hover{transform:translateY(-3px);box-shadow:0 6px 20px rgba(79,70,229,.13);border-color:var(--indigo-300);}
+.meeting-folder-icon{width:44px;height:36px;background:var(--indigo-100);border-radius:8px 8px 0 8px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;position:relative;}
+.meeting-folder-icon::before{content:'';position:absolute;top:-8px;left:0;width:16px;height:8px;background:var(--indigo-200);border-radius:4px 4px 0 0;}
+.meeting-folder-icon svg{width:20px;height:20px;stroke:var(--indigo-600);fill:none;}
+.meeting-folder-title{font-size:13px;font-weight:600;color:var(--gray-800);margin-bottom:4px;}
+.meeting-folder-date{font-size:11px;color:var(--gray-500);}
+.meeting-folder-delete{position:absolute;top:8px;right:8px;opacity:0;background:#fee2e2;border:none;border-radius:5px;padding:4px 6px;cursor:pointer;transition:opacity .15s;}
+.meeting-folder:hover .meeting-folder-delete{opacity:1;}
+.meeting-folder-delete svg{width:12px;height:12px;stroke:#991b1b;}
+
+/* ── Meeting detail ── */
+.meeting-detail-panel{background:#fff;border-radius:16px;border:1px solid var(--gray-200);padding:0;overflow:hidden;}
+.meeting-detail-back{display:inline-flex;align-items:center;gap:6px;color:var(--indigo-600);font-size:13px;font-weight:600;cursor:pointer;padding:16px 24px;border-bottom:1px solid var(--gray-100);width:100%;transition:background .15s;}
+.meeting-detail-back:hover{background:var(--indigo-50);}
+
+/* ── Meeting tabs ── */
+.meeting-tabs{display:flex;gap:0;border-bottom:2px solid var(--gray-200);padding:0 24px;}
+.meeting-tab{padding:12px 18px;font-size:13px;font-weight:600;color:var(--gray-500);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;white-space:nowrap;}
+.meeting-tab:hover{color:var(--indigo-600);}
+.meeting-tab.active{color:var(--indigo-600);border-bottom-color:var(--indigo-600);}
+.meeting-tab-content{padding:24px;display:none;}
+.meeting-tab-content.active{display:block;}
+
+/* ── Meeting detail fields ── */
+.detail-label{font-size:11px;font-weight:700;color:var(--indigo-600);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+.detail-field{font-size:14px;color:var(--gray-700);line-height:1.8;outline:none;padding:4px 0;}
+.detail-field[contenteditable="true"]{border:1px dashed var(--indigo-300);border-radius:6px;padding:8px;background:var(--indigo-50);}
+.detail-section{margin-bottom:20px;}
+
+/* ── Auto-grow textarea ── */
+.auto-textarea{width:100%;min-height:90px;padding:10px 14px;border:1px solid var(--gray-300);border-radius:8px;font-family:var(--font-main);font-size:13px;line-height:1.7;resize:none;overflow:hidden;transition:border-color .15s;}
+.auto-textarea:focus{outline:none;border-color:var(--indigo-500);box-shadow:0 0 0 3px rgba(99,102,241,.1);}
+.auto-textarea[readonly]{border-color:transparent;background:transparent;cursor:default;padding:0;}
+
+/* ── Rich editor (word-like) ── */
+.rich-toolbar{display:flex;flex-wrap:wrap;gap:4px;padding:8px 12px;border:1px solid var(--gray-300);border-bottom:none;border-radius:8px 8px 0 0;background:var(--gray-50);}
+.rich-toolbar button{padding:4px 8px;border:1px solid var(--gray-200);border-radius:5px;background:#fff;cursor:pointer;font-size:12px;font-family:var(--font-main);color:var(--gray-700);transition:all .1s;}
+.rich-toolbar button:hover{background:var(--indigo-50);border-color:var(--indigo-300);color:var(--indigo-700);}
+.rich-editor{min-height:280px;padding:16px;border:1px solid var(--gray-300);border-radius:0 0 8px 8px;font-family:var(--font-main);font-size:14px;line-height:1.8;outline:none;overflow-y:auto;}
+.rich-editor[contenteditable="false"]{background:transparent;border-color:transparent;padding:0;}
+.rich-editor h1,.rich-editor h2,.rich-editor h3{margin:12px 0 6px;}
+.rich-editor ul,.rich-editor ol{margin-left:20px;}
+
+/* ── Photo gallery ── */
+.photo-gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-top:12px;}
+.photo-item{position:relative;border-radius:10px;overflow:hidden;aspect-ratio:4/3;border:1px solid var(--gray-200);}
+.photo-item img{width:100%;height:100%;object-fit:cover;}
+.photo-delete{position:absolute;top:6px;right:6px;background:rgba(0,0,0,.55);border:none;border-radius:50%;width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;opacity:0;transition:opacity .2s;}
+.photo-item:hover .photo-delete{opacity:1;}
+.photo-delete svg{width:13px;height:13px;stroke:#fff;}
+.photo-upload-zone{border:2px dashed var(--gray-300);border-radius:10px;padding:30px;text-align:center;cursor:pointer;transition:all .2s;color:var(--gray-500);}
+.photo-upload-zone:hover{border-color:var(--indigo-400);color:var(--indigo-600);background:var(--indigo-50);}
+.file-attachment{display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid var(--gray-200);border-radius:8px;margin-bottom:8px;background:var(--gray-50);}
+.file-attachment svg{width:18px;height:18px;stroke:var(--indigo-500);}
+.file-attachment-name{flex:1;font-size:13px;color:var(--gray-700);}
+.file-attachment-del{background:none;border:none;cursor:pointer;padding:2px;}
+.file-attachment-del svg{width:14px;height:14px;stroke:#ef4444;}
+
+/* ── Team input sheet ── */
+.team-input-sheet{background:var(--gray-50);border-radius:10px;border:1px solid var(--gray-200);padding:16px;margin-bottom:16px;}
+.team-input-sheet h4{font-size:13px;font-weight:700;color:var(--gray-700);margin-bottom:10px;}
+.team-input-row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;}
+.team-input-group{display:flex;flex-direction:column;gap:4px;}
+.team-input-group label{font-size:11px;font-weight:600;color:var(--gray-500);text-transform:uppercase;letter-spacing:.05em;}
+.team-input-group input,.team-input-group select{padding:7px 10px;border:1px solid var(--gray-300);border-radius:7px;font-size:13px;font-family:var(--font-main);background:#fff;}
+
+/* ── Phase select ── */
+.phase-select{padding:4px 8px;border:1px solid var(--gray-200);border-radius:6px;font-family:var(--font-main);font-size:12px;font-weight:600;cursor:pointer;}
+
+/* ── Gantt / execution plan ── */
+.gantt-wrap{overflow-x:auto;margin-top:8px;}
+.gantt-table{min-width:900px;width:100%;border-collapse:collapse;}
+.gantt-table thead th{padding:8px 10px;border-bottom:2px solid var(--gray-200);font-size:11px;font-weight:600;color:var(--gray-600);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap;}
+.gantt-table tbody td{padding:10px;border-bottom:1px solid var(--gray-100);font-size:13px;vertical-align:middle;}
+.gantt-month-header{background:var(--indigo-50);font-size:10px;font-weight:700;color:var(--indigo-600);text-align:center;border:1px solid var(--indigo-100);}
+.gantt-bar-cell{position:relative;height:32px;}
+.gantt-bar{position:absolute;top:50%;transform:translateY(-50%);height:18px;border-radius:4px;transition:width .4s;}
+
+/* ── Monthly stacked chart helper ── */
+.sync-badge{display:inline-flex;align-items:center;gap:5px;background:var(--indigo-50);color:var(--indigo-600);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:600;}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--emerald-500);}
+
+/* ── Budget chart ── */
+.budget-chart-row{display:grid;grid-template-columns:260px 1fr;gap:24px;align-items:start;}
+.budget-legend{display:flex;flex-direction:column;gap:10px;}
+.budget-legend-item{display:flex;align-items:center;gap:10px;font-size:13px;}
+.budget-legend-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.budget-legend-label{flex:1;color:var(--gray-700);}
+.budget-legend-value{font-weight:600;color:var(--gray-900);font-family:var(--font-mono);font-size:12px;}
+.budget-legend-pct{color:var(--gray-500);font-size:11px;}
+
+/* ── This-month card ── */
+.thismonth-tasks{display:flex;flex-direction:column;gap:6px;margin-top:10px;}
+.thismonth-task{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--gray-700);}
+.thismonth-dot{width:7px;height:7px;border-radius:50%;background:var(--indigo-500);flex-shrink:0;}
+
+/* ── Misc ── */
+.hidden{display:none!important;}
+@keyframes fadeInUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.animate-fade-in{animation:fadeInUp .5s ease-out;}
+.stagger-1{animation-delay:.05s;}.stagger-2{animation-delay:.1s;}.stagger-3{animation-delay:.15s;}.stagger-4{animation-delay:.2s;}
+@keyframes slideIn{from{transform:translateX(400px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+@keyframes slideOut{from{transform:translateX(0);opacity:1;}to{transform:translateX(400px);opacity:0;}}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-thumb{background:var(--gray-300);border-radius:4px;}
+</style>
+</head>
+<body>
+<div class="dashboard">
+
+<!-- ══ Sidebar ══ -->
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="logo"><svg viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"></rect><line x1="9" y1="9" x2="15" y2="9"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg></div>
+    <div class="brand"><h1>뉴트로닉스</h1><p>Project Dashboard</p></div>
+  </div>
+  <nav class="nav">
+    <div class="nav-section">
+      <div class="nav-label">
+        <span>메뉴</span>
+        <button id="addMenuToggle" style="display:none;padding:4px 8px;font-size:11px;background:var(--indigo-600);color:#fff;border:none;border-radius:5px;cursor:pointer;" onclick="toggleAddMenu()">+ 추가</button>
+      </div>
+      <div id="addMenuForm" class="add-menu-form hidden">
+        <input type="text" id="newMenuName" placeholder="메뉴 이름 입력"/>
+        <div class="add-menu-btns">
+          <button class="btn-confirm" onclick="addCustomMenu()">추가</button>
+          <button class="btn-cancel" onclick="toggleAddMenu()">취소</button>
+        </div>
+      </div>
+      <div id="navItemsContainer">
+        <div class="nav-item active" data-section="overview" onclick="showSection('overview',this)">
+          <svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+          <span>프로젝트 개요</span>
+        </div>
+        <div class="nav-item" data-section="meetings" onclick="showSection('meetings',this)">
+          <svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+          <span>회의록</span>
+        </div>
+        <div class="nav-item" data-section="progress" onclick="showSection('progress',this)">
+          <svg viewBox="0 0 24 24" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+          <span>진행현황</span>
+        </div>
+        <div class="nav-item" data-section="budget" onclick="showSection('budget',this)">
+          <svg viewBox="0 0 24 24" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+          <span>예산 관리</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sidebar-footer-title">프로젝트 기간</div>
+    <div>2026.03.01 ~ 2026.12.31</div>
+    <div style="margin-top:8px;display:flex;align-items:center;gap:4px;">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+      <span>업데이트: <span id="lastSaveDate">-</span></span>
+    </div>
+  </div>
+</aside>
+
+<!-- ══ Main ══ -->
+<main class="main">
+  <header class="header">
+    <div class="header-left">
+      <h2 id="page-title">프로젝트 개요</h2>
+      <div class="breadcrumb"><span>대시보드</span><span>/</span><span id="breadcrumb-current">개요</span></div>
+    </div>
+    <div class="header-right">
+      <button class="btn btn-secondary" id="editModeBtn" onclick="toggleEditMode()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        편집 모드
+      </button>
+      <button class="btn btn-secondary" id="revertBtn" onclick="revertData()" title="마지막 저장 시점으로 되돌리기">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 .49-3.45"></path></svg>
+        편집 되돌리기
+      </button>
+      <button class="btn btn-secondary" onclick="exportData()">내보내기</button>
+      <button class="btn btn-primary" onclick="saveData()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
+        저장
+      </button>
+    </div>
+  </header>
+
+  <div class="content">
+    <div class="container">
+
+      <!-- Edit Alert -->
+      <div id="editAlert" class="edit-alert hidden">
+        <svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        <div><strong style="color:#92400e;">편집 모드 활성화</strong><p style="color:#78716c;font-size:13px;margin-top:4px;">모든 필드를 수정할 수 있습니다. 변경 후 상단의 저장 버튼을 클릭하세요.</p></div>
+      </div>
+
+      <!-- ══════════════════════ OVERVIEW ══════════════════════ -->
+      <div id="section-overview">
+        <div class="banner animate-fade-in">
+          <div class="banner-content">
+            <h1 contenteditable="false" id="bannerTitle" class="editable-content" style="outline:none;">취약계층을 위한 스마트 영양제 디스펜서</h1>
+            <p contenteditable="false" id="bannerDesc" class="editable-content" style="outline:none;">고령자의 건강한 삶을 지원하는 혁신적인 IoT 기반 자동 영양제 관리 시스템. 7가지 영양제 슬롯, 스마트 알림, 보호자 연동 기능을 제공합니다.</p>
+          </div>
+        </div>
+
+        <div class="cards-grid">
+          <div class="card animate-fade-in stagger-1">
+            <div class="card-header"><div class="card-icon indigo"><svg viewBox="0 0 24 24" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></div><div class="card-title">프로젝트 진행률</div></div>
+            <div class="card-value"><input type="number" id="progressValue" value="68" min="0" max="100" class="editable-field display-mode" readonly style="width:80px;display:inline;font-size:26px;font-weight:700;"/>%</div>
+            <div class="card-subtitle" contenteditable="false" id="progressSubtitle" class="editable-content" style="outline:none;">목표 대비 순조롭게 진행 중</div>
+            <div class="progress-bar"><div class="progress-fill" id="progressBar" style="width:68%"></div></div>
+          </div>
+          <div class="card animate-fade-in stagger-2">
+            <div class="card-header"><div class="card-icon orange"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg></div><div class="card-title">팀 구성원</div></div>
+            <div class="card-value" id="teamCount">5명</div>
+            <div class="card-subtitle" contenteditable="false" id="teamDesc" class="editable-content" style="outline:none;">PM, HW, SW, 디자인, 전자</div>
+          </div>
+          <div class="card animate-fade-in stagger-3">
+            <div class="card-header"><div class="card-icon emerald"><svg viewBox="0 0 24 24" stroke-width="2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></div><div class="card-title">완료된 진행현황</div></div>
+            <div class="card-value" contenteditable="false" id="milestoneValue" class="editable-content" style="outline:none;">3 / 5</div>
+            <div class="card-subtitle" contenteditable="false" id="milestoneDesc" class="editable-content" style="outline:none;">설계 단계 완료</div>
+          </div>
+          <!-- 잔여예산 카드 -->
+          <div class="card animate-fade-in stagger-4">
+            <div class="card-header"><div class="card-icon amber"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg></div><div class="card-title">잔여 예산</div></div>
+            <div class="card-value mono" id="overviewRemainingBudget" style="color:var(--emerald-600);font-size:20px;">-</div>
+            <div class="card-subtitle">약 <span id="overviewRemainingPct">-</span>% 남음</div>
+            <div class="progress-bar" style="margin-top:10px;"><div class="progress-fill" id="overviewBudgetBar" style="width:10%;background:linear-gradient(90deg,var(--emerald-500),var(--emerald-600));"></div></div>
+          </div>
+          <!-- 이번달 수행계획 카드 -->
+          <div class="card animate-fade-in stagger-4">
+            <div class="card-header"><div class="card-icon purple"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div><div class="card-title" id="thisMonthCardTitle">이번달 수행 계획</div></div>
+            <div class="thismonth-tasks" id="thisMonthTasks"><div style="color:var(--gray-400);font-size:13px;">수행계획도를 입력하세요</div></div>
+          </div>
+          <!-- 작성된 회의록 카드 -->
+          <div class="card animate-fade-in stagger-4" style="cursor:pointer;" onclick="showSection('meetings',document.querySelector('[data-section=meetings]'))">
+            <div class="card-header"><div class="card-icon indigo"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div><div class="card-title">작성된 회의록</div></div>
+            <div class="card-value" id="meetingCount">0건</div>
+            <div class="card-subtitle">회의록 보러 가기 →</div>
+          </div>
+        </div>
+
+        <!-- 팀 구성 -->
+        <div class="table-container animate-fade-in stagger-4">
+          <div class="table-header">
+            <div class="table-title">팀 구성</div>
+            <button id="addTeamBtn" class="add-row-btn hidden" onclick="addTeamMember()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>팀원 추가
+            </button>
+          </div>
+          <div id="teamInputSheet" class="team-input-sheet hidden">
+            <h4>📋 팀원 빠른 입력 시트</h4>
+            <div class="team-input-row">
+              <div class="team-input-group"><label>이름</label><input type="text" id="sheetName" placeholder="홍길동" style="width:110px;"/></div>
+              <div class="team-input-group"><label>역할</label><input type="text" id="sheetRole" placeholder="Software Engineer" style="width:160px;"/></div>
+              <div class="team-input-group"><label>색상</label><select id="sheetColor" style="width:90px;"><option value="indigo">인디고</option><option value="orange">오렌지</option><option value="emerald">에메랄드</option><option value="purple">퍼플</option><option value="pink">핑크</option><option value="cyan">시안</option></select></div>
+              <div class="team-input-group"><label>&nbsp;</label><button class="add-row-btn" onclick="addTeamFromSheet()" style="height:34px;">추가</button></div>
+            </div>
+          </div>
+          <div class="team-grid" id="teamGrid"></div>
+        </div>
+
+        <!-- 전체팀원 -->
+        <div class="table-container" style="margin-top:24px;">
+          <div class="table-title" style="margin-bottom:16px;">전체 팀원</div>
+          <table><thead><tr><th>#</th><th>이름</th><th>역할</th><th>전화번호</th></tr></thead><tbody id="allTeamBody"></tbody></table>
+        </div>
+      </div>
+
+      <!-- ══════════════════════ MEETINGS ══════════════════════ -->
+      <div id="section-meetings" class="hidden">
+
+        <!-- ★ Category dashboard (6 cards) -->
+        <div id="meetings-category-view">
+          <div class="cards-grid" style="grid-template-columns:repeat(auto-fill,minmax(210px,1fr));margin-bottom:28px;">
+            <!-- 1. 회의록 -->
+            <div class="card" style="cursor:pointer;border-top:4px solid var(--indigo-500);" onclick="openMeetingCategory('minutes')">
+              <div class="card-header">
+                <div class="card-icon indigo"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div>
+                <div class="card-title">📋 회의록</div>
+              </div>
+              <div class="card-value" id="cat-count-minutes" style="font-size:20px;">-</div>
+              <div class="card-subtitle">회의 내용 · 결정사항</div>
+            </div>
+            <!-- 2. 변경사항 -->
+            <div class="card" style="cursor:pointer;border-top:4px solid var(--orange-500);" onclick="openMeetingCategory('changes')">
+              <div class="card-header">
+                <div class="card-icon orange"><svg viewBox="0 0 24 24" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 .49-3.45"></path></svg></div>
+                <div class="card-title">🔄 변경사항</div>
+              </div>
+              <div class="card-value" id="cat-count-changes" style="font-size:20px;">-</div>
+              <div class="card-subtitle">설계 · 일정 변경 내역</div>
+            </div>
+            <!-- 3. 수행계획서 -->
+            <div class="card" style="cursor:pointer;border-top:4px solid var(--emerald-500);" onclick="openMeetingCategory('plan')">
+              <div class="card-header">
+                <div class="card-icon emerald"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
+                <div class="card-title">📊 수행계획서</div>
+              </div>
+              <div class="card-value" id="cat-count-plan" style="font-size:20px;">-</div>
+              <div class="card-subtitle">차기 수행 계획 문서</div>
+            </div>
+            <!-- 4. 회의 사진 -->
+            <div class="card" style="cursor:pointer;border-top:4px solid var(--amber-500);" onclick="openMeetingCategory('photos')">
+              <div class="card-header">
+                <div class="card-icon amber"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>
+                <div class="card-title">🖼 회의 사진</div>
+              </div>
+              <div class="card-value" id="cat-count-photos" style="font-size:20px;">-</div>
+              <div class="card-subtitle">현장 사진 · 이미지</div>
+            </div>
+            <!-- 5. 보고서 -->
+            <div class="card" style="cursor:pointer;border-top:4px solid #7c3aed;" onclick="openMeetingCategory('report')">
+              <div class="card-header">
+                <div class="card-icon purple"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></div>
+                <div class="card-title">📄 보고서</div>
+              </div>
+              <div class="card-value" id="cat-count-report" style="font-size:20px;">-</div>
+              <div class="card-subtitle">결과 · 진행 보고서</div>
+            </div>
+            <!-- 6. 전체 회의록 목록 -->
+            <div class="card" style="cursor:pointer;border-top:4px solid var(--gray-400);" onclick="openMeetingCategory('all')">
+              <div class="card-header">
+                <div class="card-icon" style="background:var(--gray-100);color:var(--gray-600);"><svg viewBox="0 0 24 24" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></div>
+                <div class="card-title">📁 전체 목록</div>
+              </div>
+              <div class="card-value" id="cat-count-all" style="font-size:20px;">-</div>
+              <div class="card-subtitle">모든 회의록 보기</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Folder list (category filtered) -->
+        <div id="meetings-folder-view" class="hidden">
+          <div class="table-container">
+            <div class="table-header">
+              <div style="display:flex;align-items:center;gap:12px;">
+                <div class="meeting-detail-back" style="padding:0;border:none;width:auto;background:none;" onclick="closeMeetingFolderView()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                  카테고리로 돌아가기
+                </div>
+                <div class="table-title" id="folderViewTitle">회의록 목록</div>
+              </div>
+              <button id="addMeetingBtn" class="add-row-btn hidden" onclick="addMeeting()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>회의록 추가
+              </button>
+            </div>
+            <div class="meetings-folder-grid" id="meetingsFolderGrid"></div>
+          </div>
+        </div>
+
+        <!-- Detail view -->
+        <div id="meetings-detail-view" class="hidden">
+          <div class="meeting-detail-panel">
+            <div class="meeting-detail-back" onclick="closeMeetingDetail()">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              회의록 목록으로 돌아가기
+            </div>
+            <!-- Title + date row -->
+            <div style="padding:20px 24px 0;display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;">
+              <div style="flex:1;min-width:200px;">
+                <div style="font-size:11px;font-weight:700;color:var(--indigo-600);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">제목</div>
+                <div class="detail-field" id="detailTitle" contenteditable="false" style="font-size:20px;font-weight:700;color:var(--gray-900);"></div>
+              </div>
+              <!-- ① 날짜 수정 가능 -->
+              <div style="min-width:160px;">
+                <div style="font-size:11px;font-weight:700;color:var(--indigo-600);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">날짜</div>
+                <input type="date" id="detailDate" class="editable-field display-mode" readonly style="font-size:14px;font-weight:500;width:160px;"/>
+              </div>
+            </div>
+            <!-- Tabs: ⑥ 5개 목차 -->
+            <div class="meeting-tabs" style="margin-top:16px;">
+              <div class="meeting-tab active" onclick="switchMeetingTab('minutes',this)">📋 회의록</div>
+              <div class="meeting-tab" onclick="switchMeetingTab('changes',this)">🔄 변경사항</div>
+              <div class="meeting-tab" onclick="switchMeetingTab('plan',this)">📊 수행계획서</div>
+              <div class="meeting-tab" onclick="switchMeetingTab('photos',this)">🖼 회의 사진</div>
+              <div class="meeting-tab" onclick="switchMeetingTab('report',this)">📄 보고서</div>
+            </div>
+
+            <!-- Tab: 회의록 -->
+            <div id="tab-minutes" class="meeting-tab-content active">
+              <!-- 회의록 파일 생성 -->
+              <div class="tab-file-bar" id="minutesFileBar" style="background:var(--indigo-50);border:1px solid var(--indigo-200);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                <div style="font-size:12px;font-weight:700;color:var(--indigo-700);">📋 회의록 파일</div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  <span id="minutesFileList" style="font-size:12px;color:var(--gray-500);"></span>
+                  <button id="minutesCreateBtn" class="add-row-btn hidden" onclick="createMeetingFile('minutes')" style="font-size:11px;padding:5px 10px;">+ 파일 생성</button>
+                </div>
+              </div>
+              <div class="detail-section"><div class="detail-label">참석자</div><div class="detail-field" id="detailParticipants" contenteditable="false" style="outline:none;"></div></div>
+              <div class="detail-section"><div class="detail-label">안건</div><div class="detail-field" id="detailAgenda" contenteditable="false" style="outline:none;"></div></div>
+              <div class="detail-section"><div class="detail-label">주요 결정사항</div><div class="detail-field" id="detailDecisions" contenteditable="false" style="outline:none;"></div></div>
+              <div class="detail-section">
+                <div class="detail-label" style="display:flex;align-items:center;justify-content:space-between;">
+                  <span>액션 아이템</span>
+                  <label id="actionsImgBtn" class="add-row-btn hidden" style="cursor:pointer;font-size:11px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                    이미지 추가
+                    <input type="file" accept="image/*" multiple style="display:none;" onchange="addActionImages(event)"/>
+                  </label>
+                </div>
+                <textarea id="detailActions" class="auto-textarea" readonly oninput="autoGrow(this)"></textarea>
+                <div id="actionsImageGrid" class="photo-gallery" style="margin-top:12px;"></div>
+              </div>
+            </div>
+
+            <!-- Tab: 변경사항 -->
+            <div id="tab-changes" class="meeting-tab-content">
+              <div class="tab-file-bar" style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                <div style="font-size:12px;font-weight:700;color:var(--orange-700);">🔄 변경사항 파일</div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  <span id="changesFileList" style="font-size:12px;color:var(--gray-500);"></span>
+                  <button id="changesCreateBtn" class="add-row-btn hidden" onclick="createMeetingFile('changes')" style="font-size:11px;padding:5px 10px;background:var(--orange-600);">+ 파일 생성</button>
+                </div>
+              </div>
+              <div class="detail-section">
+                <div class="detail-label">변경사항 내역</div>
+                <div class="detail-field" id="detailChanges" contenteditable="false" style="outline:none;min-height:60px;"></div>
+              </div>
+            </div>
+
+            <!-- Tab: 수행계획서 -->
+            <div id="tab-plan" class="meeting-tab-content">
+              <div class="tab-file-bar" style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                <div style="font-size:12px;font-weight:700;color:var(--emerald-700);">📊 수행계획서 파일</div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  <span id="planFileList" style="font-size:12px;color:var(--gray-500);"></span>
+                  <button id="planFileCreateBtn" class="add-row-btn hidden" onclick="createMeetingFile('plan')" style="font-size:11px;padding:5px 10px;background:var(--emerald-600);">+ 파일 생성</button>
+                </div>
+              </div>
+              <div class="detail-label" style="margin-bottom:10px;">수행계획서</div>
+              <div id="planToolbar" class="rich-toolbar hidden">
+                <button onclick="fmt('bold')"><b>B</b></button>
+                <button onclick="fmt('italic')"><i>I</i></button>
+                <button onclick="fmt('underline')"><u>U</u></button>
+                <button onclick="fmtBlock('h2')">H2</button>
+                <button onclick="fmtBlock('h3')">H3</button>
+                <button onclick="fmtBlock('p')">본문</button>
+                <button onclick="fmt('insertUnorderedList')">• 목록</button>
+                <button onclick="fmt('insertOrderedList')">1. 번호</button>
+                <button onclick="fmt('justifyLeft')">좌</button>
+                <button onclick="fmt('justifyCenter')">중앙</button>
+                <button onclick="fmt('justifyRight')">우</button>
+                <button onclick="fmt('strikeThrough')" style="text-decoration:line-through;">S</button>
+                <label style="cursor:pointer;padding:4px 8px;border:1px solid var(--gray-200);border-radius:5px;background:#fff;font-size:12px;color:var(--gray-700);">📎 파일
+                  <input type="file" multiple style="display:none;" onchange="attachFileToPlan(event,'plan')"/>
+                </label>
+              </div>
+              <div id="detailPlan" class="rich-editor" contenteditable="false"></div>
+              <div id="planAttachments" style="margin-top:12px;"></div>
+            </div>
+
+            <!-- Tab: 회의 사진 -->
+            <div id="tab-photos" class="meeting-tab-content">
+              <div class="tab-file-bar" style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                <div style="font-size:12px;font-weight:700;color:#92400e;">🖼 회의 사진 파일</div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  <span id="photosFileList" style="font-size:12px;color:var(--gray-500);"></span>
+                  <button id="photosCreateBtn" class="add-row-btn hidden" onclick="createMeetingFile('photos')" style="font-size:11px;padding:5px 10px;background:var(--amber-500);color:#fff;border:none;border-radius:6px;cursor:pointer;">+ 파일 생성</button>
+                </div>
+              </div>
+              <div class="detail-label" style="margin-bottom:12px;">회의 사진</div>
+              <div id="meetingPhotoGallery" class="photo-gallery"></div>
+              <label id="meetingPhotoUploadBtn" class="photo-upload-zone" style="display:none;margin-top:12px;cursor:pointer;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 8px;display:block;"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                <div style="font-size:14px;font-weight:600;margin-bottom:4px;">이미지 파일 업로드</div>
+                <div style="font-size:12px;">클릭하거나 파일을 여기로 드래그하세요 (JPG, PNG, GIF)</div>
+                <input type="file" accept="image/*" multiple style="display:none;" onchange="uploadMeetingPhotos(event)"/>
+              </label>
+            </div>
+
+            <!-- Tab: 보고서 -->
+            <div id="tab-report" class="meeting-tab-content">
+              <div class="tab-file-bar" style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+                <div style="font-size:12px;font-weight:700;color:#7c3aed;">📄 보고서 파일</div>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                  <span id="reportFileList" style="font-size:12px;color:var(--gray-500);"></span>
+                  <button id="reportCreateBtn" class="add-row-btn hidden" onclick="createMeetingFile('report')" style="font-size:11px;padding:5px 10px;background:#7c3aed;">+ 파일 생성</button>
+                </div>
+              </div>
+              <div class="detail-label" style="margin-bottom:10px;">보고서</div>
+              <div id="reportToolbar" class="rich-toolbar hidden">
+                <button onclick="fmtReport('bold')"><b>B</b></button>
+                <button onclick="fmtReport('italic')"><i>I</i></button>
+                <button onclick="fmtReport('underline')"><u>U</u></button>
+                <button onclick="fmtBlockReport('h2')">H2</button>
+                <button onclick="fmtBlockReport('h3')">H3</button>
+                <button onclick="fmtBlockReport('p')">본문</button>
+                <button onclick="fmtReport('insertUnorderedList')">• 목록</button>
+                <button onclick="fmtReport('insertOrderedList')">1. 번호</button>
+                <button onclick="fmtReport('justifyLeft')">좌</button>
+                <button onclick="fmtReport('justifyCenter')">중앙</button>
+                <button onclick="fmtReport('justifyRight')">우</button>
+                <button onclick="fmtReport('strikeThrough')" style="text-decoration:line-through;">S</button>
+                <label style="cursor:pointer;padding:4px 8px;border:1px solid var(--gray-200);border-radius:5px;background:#fff;font-size:12px;color:var(--gray-700);">📎 파일
+                  <input type="file" multiple style="display:none;" onchange="attachFileToPlan(event,'report')"/>
+                </label>
+              </div>
+              <div id="detailReport" class="rich-editor" contenteditable="false"></div>
+              <div id="reportAttachments" style="margin-top:12px;"></div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════════════════ PROGRESS ══════════════════════ -->
+      <div id="section-progress" class="hidden">
+        <!-- 프로젝트 진행과정 -->
+        <div class="table-container">
+          <div class="table-header">
+            <div class="table-title">프로젝트 진행과정</div>
+            <button id="addMilestoneBtn" class="add-row-btn hidden" onclick="addMilestone()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>항목 추가
+            </button>
+          </div>
+          <div style="max-height:360px;overflow-y:auto;border-radius:8px;">
+          <table>
+            <thead style="position:sticky;top:0;background:#fff;z-index:2;"><tr>
+              <th>단계</th><th>작업</th><th>담당자</th><th>기간</th><th style="min-width:180px;">진행률</th><th>상태</th>
+              <th style="width:50px;">순서</th>
+              <th id="milestoneActionsHeader" class="hidden" style="width:70px;">작업</th>
+            </tr></thead>
+            <tbody id="milestonesTableBody"></tbody>
+          </table>
+          </div>
+        </div>
+
+        <!-- ③ 월별 진행 현황 (3월~12월, 항목별) -->
+        <div class="chart-container">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <div class="table-title">월별 진행 현황 (3월~12월)</div>
+            <span class="sync-badge"><span class="sync-dot"></span>진행과정과 연동됨</span>
+          </div>
+          <canvas id="progressChart"></canvas>
+        </div>
+
+        <!-- ④ 수행계획도 -->
+        <div class="table-container" style="margin-top:24px;">
+          <div class="table-header">
+            <div class="table-title">프로젝트 수행계획도</div>
+            <button id="addPlanBtn" class="add-row-btn hidden" onclick="addPlanItem()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>항목 추가
+            </button>
+          </div>
+          <!-- 수행계획도 입력 대시보드 -->
+          <div style="overflow-x:auto;">
+            <table style="min-width:800px;">
+              <thead><tr>
+                <th>단계</th><th>이름</th><th>담당자</th><th>기간(시작)</th><th>기간(종료)</th><th style="min-width:180px;">진행률</th><th>상태</th>
+                <th id="planActionsHeader" class="hidden" style="width:70px;">작업</th>
+              </tr></thead>
+              <tbody id="planTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- ④ 수행계획도 간트 차트 -->
+        <div class="chart-container">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+            <div class="table-title">수행계획도 이행률</div>
+            <span class="sync-badge"><span class="sync-dot"></span>수행계획도와 연동됨</span>
+          </div>
+          <canvas id="planChart"></canvas>
+        </div>
+      </div>
+
+      <!-- ══════════════════════ BUDGET ══════════════════════ -->
+      <div id="section-budget" class="hidden">
+        <div class="cards-grid">
+          <div class="card">
+            <div class="card-title">총 예산</div>
+            <div class="card-value mono"><span id="totalBudgetDisplay" style="font-size:24px;font-weight:700;font-family:var(--font-mono);"></span>원<input type="number" id="totalBudget" value="26000000" class="editable-field display-mode" readonly style="width:160px;display:none;font-size:24px;font-weight:700;font-family:var(--font-mono);"/></div>
+            <div class="card-subtitle">승인된 총 예산</div>
+          </div>
+          <div class="card">
+            <div class="card-title">집행액</div>
+            <div class="card-value mono" style="color:var(--orange-600);"><span id="spentBudget">0</span>원</div>
+            <div class="card-subtitle">현재까지 사용</div>
+          </div>
+          <div class="card">
+            <div class="card-title">잔여 예산</div>
+            <div class="card-value mono" style="color:var(--emerald-600);"><span id="remainingBudget">0</span>원</div>
+            <div class="card-subtitle">약 <span id="remainingPercent">0</span>% 남음</div>
+          </div>
+        </div>
+        <div class="table-container">
+          <div class="table-header">
+            <div class="table-title">예산 세부 내역</div>
+            <button id="addBudgetBtn" class="add-row-btn hidden" onclick="addBudgetItem()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>항목 추가
+            </button>
+          </div>
+          <table><thead><tr><th>카테고리</th><th>계획</th><th>실제</th><th>차이</th><th>비고</th><th id="budgetActionsHeader" class="hidden" style="width:70px;">작업</th></tr></thead><tbody id="budgetTableBody"></tbody></table>
+        </div>
+        <div class="chart-container">
+          <div class="table-title" style="margin-bottom:20px;">예산 분포</div>
+          <div class="budget-chart-row">
+            <div><canvas id="budgetChart"></canvas></div>
+            <div class="budget-legend" id="budgetLegend"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /container -->
+  </div><!-- /content -->
+</main>
+</div><!-- /dashboard -->
+
+<!-- Photo Modal (team) -->
+<div id="photoModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:16px;padding:28px;width:340px;">
+    <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;">팀원 사진 변경</h3>
+    <input type="file" id="photoFileInput" accept="image/*" style="display:block;width:100%;margin-bottom:12px;font-size:13px;"/>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;"><span style="font-size:12px;color:var(--gray-500);">또는 URL:</span><input type="text" id="photoUrlInput" placeholder="https://..." style="flex:1;padding:7px 10px;border:1px solid var(--gray-300);border-radius:7px;font-size:13px;"/></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;">
+      <button onclick="closePhotoModal()" style="padding:8px 16px;border:1px solid var(--gray-300);border-radius:8px;background:#fff;cursor:pointer;font-size:13px;">취소</button>
+      <button onclick="applyPhoto()" style="padding:8px 16px;border:none;border-radius:8px;background:var(--indigo-600);color:#fff;cursor:pointer;font-size:13px;">적용</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════
+let editMode = false;
+let currentMeetingIndex = -1;
+let currentPhotoIndex = -1;
+let currentMeetingTab = 'minutes';
+let progressChartInstance = null;
+let planChartInstance = null;
+let budgetChartInstance = null;
+let lastSavedSnapshot = null; // 편집 되돌리기용 스냅샷
+
+const CHART_COLORS = ['rgba(99,102,241,.85)','rgba(249,115,22,.85)','rgba(16,185,129,.85)','rgba(251,191,36,.85)','rgba(236,72,153,.85)','rgba(14,165,233,.85)','rgba(168,85,247,.85)','rgba(239,68,68,.85)','rgba(20,184,166,.85)','rgba(234,179,8,.85)'];
+const PHASE_COLORS = {'기획':'background:#e0e7ff;color:#4338ca;','설계':'background:#fed7aa;color:#c2410c;','개발':'background:#d1fae5;color:#065f46;','테스트':'background:#fef3c7;color:#92400e;','완료':'background:#e5e7eb;color:#374151;'};
+const PHASES = ['기획','설계','개발','테스트','완료'];
+const MONTHS = ['3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
+const MONTH_NUMS = ['03','04','05','06','07','08','09','10','11','12'];
+
+// ══════════════════════════════════════════
+//  DEFAULT DATA
+// ══════════════════════════════════════════
+const defaultData = {
+  overview:{ bannerTitle:'취약계층을 위한 스마트 영양제 디스펜서', bannerDesc:'고령자의 건강한 삶을 지원하는 혁신적인 IoT 기반 자동 영양제 관리 시스템. 7가지 영양제 슬롯, 스마트 알림, 보호자 연동 기능을 제공합니다.', progressValue:68, progressSubtitle:'목표 대비 순조롭게 진행 중', teamDesc:'PM, HW, SW, 디자인, 전자', milestoneValue:'3 / 5', milestoneDesc:'설계 단계 완료' },
+  team:[
+    {name:'김민준',role:'Project Manager',avatar:'김민',color:'indigo',photo:'',phone:''},
+    {name:'이서연',role:'Hardware Engineer',avatar:'이서',color:'orange',photo:'',phone:''},
+    {name:'박지호',role:'Software Developer',avatar:'박지',color:'emerald',photo:'',phone:''},
+    {name:'최유나',role:'UX/UI Designer',avatar:'최유',color:'purple',photo:'',phone:''},
+    {name:'정현우',role:'Electronics Engineer',avatar:'정현',color:'indigo',photo:'',phone:''}
+  ],
+  meetings:[
+    {date:'2026-03-05',title:'킥오프 미팅',participants:'김민준, 이서연, 박지호, 최유나',decisions:'프로젝트명 확정, MVP 범위 정의',agenda:'프로젝트 목표 설정 및 역할 분담',actions:'- 역할 별 온보딩 문서 작성\n- 초기 일정 수립',changes:'',plan:'',report:'',planAttachments:[],reportAttachments:[],photos:[],actionImages:[],minutesFiles:[],changesFiles:[],planFiles:[],photosFiles:[],reportFiles:[]},
+    {date:'2026-04-02',title:'1차 설계 검토 회의',participants:'김민준, 이서연, 박지호, 정현우',decisions:'MCU 선정, 통신 방식 결정',agenda:'하드웨어 설계 초안 검토, 소프트웨어 아키텍처 확정',actions:'- PCB 회로 설계 v1.0 (정현우, ~04/20)\n- 앱 와이어프레임 제작 (최유나, ~04/18)\n- 펌웨어 기본 구조 작성 (박지호, ~04/25)',changes:'',plan:'',report:'',planAttachments:[],reportAttachments:[],photos:[],actionImages:[],minutesFiles:[],changesFiles:[],planFiles:[],photosFiles:[],reportFiles:[]},
+    {date:'2026-05-15',title:'프로토타입 리뷰',participants:'전체 팀원',decisions:'1차 프로토타입 승인',agenda:'프로토타입 시연 및 피드백 수집',actions:'- 피드백 반영한 2차 설계 진행\n- 사용자 테스트 계획 수립',changes:'',plan:'',report:'',planAttachments:[],reportAttachments:[],photos:[],actionImages:[],minutesFiles:[],changesFiles:[],planFiles:[],photosFiles:[],reportFiles:[]}
+  ],
+  milestones:[
+    {phase:'기획',task:'요구사항 정의 및 시장 조사',owner:'김민준',period:'03/01 - 03/31',progress:100,status:'done'},
+    {phase:'설계',task:'하드웨어 아키텍처 설계',owner:'이서연',period:'04/01 - 04/30',progress:100,status:'done'},
+    {phase:'개발',task:'PCB 설계 및 제작',owner:'정현우',period:'04/20 - 05/31',progress:100,status:'done'},
+    {phase:'개발',task:'모바일 앱 개발 (iOS/Android)',owner:'박지호',period:'05/10 - 06/30',progress:72,status:'progress'},
+    {phase:'테스트',task:'사용자 테스트 (고령자 10인)',owner:'김민준',period:'07/21 - 08/10',progress:0,status:'pending'}
+  ],
+  planItems:[
+    {phase:'기획',name:'요구사항 정의',owner:'김민준',startMonth:'03',endMonth:'03',progress:100,status:'done'},
+    {phase:'설계',name:'하드웨어 설계',owner:'이서연',startMonth:'04',endMonth:'04',progress:100,status:'done'},
+    {phase:'개발',name:'PCB 제작',owner:'정현우',startMonth:'04',endMonth:'05',progress:100,status:'done'},
+    {phase:'개발',name:'모바일 앱 개발',owner:'박지호',startMonth:'05',endMonth:'06',progress:72,status:'progress'},
+    {phase:'테스트',name:'사용자 테스트',owner:'김민준',startMonth:'07',endMonth:'08',progress:0,status:'pending'}
+  ],
+  budget:{total:26000000,items:[
+    {category:'하드웨어 부품',planned:12000000,actual:11450000,note:'MCU, 모터, 센서류'},
+    {category:'PCB 제작 및 조립',planned:4500000,actual:4800000,note:'시제품 5대 기준, 소폭 초과'},
+    {category:'소프트웨어 개발',planned:8000000,actual:7200000,note:'앱 개발 인건비'},
+    {category:'사용자 테스트',planned:1500000,actual:0,note:'7월 집행 예정'}
+  ]},
+  customMenus:[],customSections:{},lastSaveDate:''
+};
+
+let appData = JSON.parse(JSON.stringify(defaultData));
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+function init(){
+  loadData();
+  renderTeam(); renderAllTeamTable();
+  renderMeetingsFolders();
+  renderMilestones();
+  renderPlanItems();
+  renderBudget();
+  renderCustomMenus();
+  updateProgress(); updateBudgetSummary(); updateOverviewBudget();
+  updateThisMonthCard(); updateLastSaveDisplay(); updateMeetingCount(); updateCategoryCounts();
+}
+
+function updateLastSaveDisplay(){
+  const el = document.getElementById('lastSaveDate');
+  el.textContent = appData.lastSaveDate || '-';
+}
+function updateMeetingCount(){
+  const el=document.getElementById('meetingCount'); if(el) el.textContent=appData.meetings.length+'건';
+}
+
+// ══════════════════════════════════════════
+//  SAVE / LOAD
+// ══════════════════════════════════════════
+function loadData(){
+  const saved = localStorage.getItem('neutronics_v3');
+  if(!saved) return;
+  try{
+    appData = JSON.parse(saved);
+    loadDataFromAppData();
+  }catch(e){ console.error(e); }
+}
+
+function saveData(){
+  // 저장 직전 스냅샷 보관 (되돌리기용)
+  lastSavedSnapshot = localStorage.getItem('neutronics_v3') || null;
+  const ov = appData.overview;
+  ov.bannerTitle = document.getElementById('bannerTitle').textContent;
+  ov.bannerDesc = document.getElementById('bannerDesc').textContent;
+  ov.progressValue = parseInt(document.getElementById('progressValue').value)||68;
+  ov.progressSubtitle = document.getElementById('progressSubtitle').textContent;
+  ov.teamDesc = document.getElementById('teamDesc').textContent;
+  ov.milestoneValue = document.getElementById('milestoneValue').textContent;
+  ov.milestoneDesc = document.getElementById('milestoneDesc').textContent;
+  appData.budget.total = parseInt(document.getElementById('totalBudget').value)||26000000;
+  if(currentMeetingIndex >= 0) saveMeetingDetail();
+  appData.lastSaveDate = new Date().toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\. /g,'.').replace(/\.$/,'');
+  localStorage.setItem('neutronics_v3', JSON.stringify(appData));
+  updateLastSaveDisplay(); showToast('저장되었습니다!','success');
+}
+
+function revertData(){
+  if(!lastSavedSnapshot){ showToast('되돌릴 저장 데이터가 없습니다','error'); return; }
+  if(!confirm('마지막 저장 시점으로 되돌리겠습니까?\n현재 편집 내용은 사라집니다.')) return;
+  try{
+    appData = JSON.parse(lastSavedSnapshot);
+    loadDataFromAppData();
+    renderTeam(); renderAllTeamTable(); renderMeetingsFolders(); updateCategoryCounts();
+    renderMilestones(); renderPlanItems(); renderBudget(); renderCustomMenus();
+    updateProgress(); updateBudgetSummary(); updateOverviewBudget();
+    updateThisMonthCard(); updateLastSaveDisplay(); updateMeetingCount(); updateCategoryCounts();
+    showToast('되돌리기 완료','success');
+  }catch(e){ showToast('되돌리기 실패','error'); }
+}
+
+function loadDataFromAppData(){
+  if(!appData.planItems) appData.planItems = JSON.parse(JSON.stringify(defaultData.planItems));
+  appData.meetings.forEach(m => {
+    if(!m.changes) m.changes='';
+    if(!m.plan) m.plan='';
+    if(!m.report) m.report='';
+    if(!m.planAttachments) m.planAttachments=[];
+    if(!m.reportAttachments) m.reportAttachments=[];
+    if(!m.photos) m.photos=[];
+    if(!m.actionImages) m.actionImages=[];
+    if(!m.minutesFiles) m.minutesFiles=[];
+    if(!m.changesFiles) m.changesFiles=[];
+    if(!m.planFiles) m.planFiles=[];
+    if(!m.photosFiles) m.photosFiles=[];
+    if(!m.reportFiles) m.reportFiles=[];
+  });
+  appData.team.forEach(t=>{ if(!t.photo) t.photo=''; if(!t.phone) t.phone=''; });
+  const ov = appData.overview;
+  if(ov){
+    document.getElementById('bannerTitle').textContent = ov.bannerTitle||'';
+    document.getElementById('bannerDesc').textContent = ov.bannerDesc||'';
+    document.getElementById('progressValue').value = ov.progressValue||68;
+    document.getElementById('progressSubtitle').textContent = ov.progressSubtitle||'';
+    document.getElementById('teamDesc').textContent = ov.teamDesc||'';
+    document.getElementById('milestoneValue').textContent = ov.milestoneValue||'3 / 5';
+    document.getElementById('milestoneDesc').textContent = ov.milestoneDesc||'';
+    updateProgress();
+  }
+  if(appData.budget){ document.getElementById('totalBudget').value = appData.budget.total; updateBudgetSummary(); }
+}
+
+function exportData(){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(appData,null,2)],{type:'application/json'}));
+  a.download='neutronics_export_v3.json'; a.click(); showToast('내보내기 완료','success');
+}
+
+// ══════════════════════════════════════════
+//  EDIT MODE
+// ══════════════════════════════════════════
+function toggleEditMode(){
+  editMode = !editMode;
+  const btn = document.getElementById('editModeBtn');
+  const alert = document.getElementById('editAlert');
+  if(editMode){
+    btn.classList.remove('btn-secondary'); btn.classList.add('btn-primary');
+    btn.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>편집 완료`;
+    alert.classList.remove('hidden');
+    document.querySelectorAll('.editable-content').forEach(el=>el.contentEditable='true');
+    document.querySelectorAll('.editable-field.display-mode').forEach(el=>el.removeAttribute('readonly'));
+    ['addMenuToggle'].forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display='block'; });
+    ['addTeamBtn','addMeetingBtn','addMilestoneBtn','addBudgetBtn','addPlanBtn'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('hidden'); });
+    ['teamInputSheet'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('hidden'); });
+    ['milestoneActionsHeader','budgetActionsHeader','planActionsHeader'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('hidden'); });
+    // show totalBudget input in edit mode
+    const tbInput=document.getElementById('totalBudget'); if(tbInput){tbInput.style.display='inline';} 
+    const tbDisp=document.getElementById('totalBudgetDisplay'); if(tbDisp){tbDisp.style.display='none';}
+    // meeting detail
+    enableMeetingDetailEdit();
+  } else {
+    btn.classList.remove('btn-primary'); btn.classList.add('btn-secondary');
+    btn.innerHTML=`<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>편집 모드`;
+    alert.classList.add('hidden');
+    document.querySelectorAll('.editable-content').forEach(el=>el.contentEditable='false');
+    document.querySelectorAll('.editable-field').forEach(el=>{ el.setAttribute('readonly','true'); if(!el.classList.contains('display-mode')) el.classList.add('display-mode'); });
+    document.getElementById('addMenuToggle').style.display='none';
+    ['addTeamBtn','addMeetingBtn','addMilestoneBtn','addBudgetBtn','addPlanBtn'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.add('hidden'); });
+    ['teamInputSheet'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.add('hidden'); });
+    ['milestoneActionsHeader','budgetActionsHeader','planActionsHeader'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.add('hidden'); });
+    // hide totalBudget input, show display span
+    const tbInput=document.getElementById('totalBudget'); if(tbInput){tbInput.style.display='none';}
+    const tbDisp=document.getElementById('totalBudgetDisplay'); if(tbDisp){tbDisp.style.display='';}
+    disableMeetingDetailEdit();
+    if(currentMeetingIndex >= 0) saveMeetingDetail();
+    saveData();
+  }
+  renderTeam(); renderAllTeamTable(); renderMeetingsFolders(); updateCategoryCounts(); renderMilestones(); renderPlanItems(); renderBudget();
+}
+
+function enableMeetingDetailEdit(){
+  ['detailTitle','detailParticipants','detailAgenda','detailDecisions','detailChanges'].forEach(id=>{ const el=document.getElementById(id); if(el) el.contentEditable='true'; });
+  const dA=document.getElementById('detailActions'); if(dA){ dA.removeAttribute('readonly'); }
+  const dD=document.getElementById('detailDate'); if(dD){ dD.removeAttribute('readonly'); dD.classList.remove('display-mode'); }
+  const planEditor=document.getElementById('detailPlan'); if(planEditor) planEditor.contentEditable='true';
+  const reportEditor=document.getElementById('detailReport'); if(reportEditor) reportEditor.contentEditable='true';
+  document.getElementById('planToolbar')?.classList.remove('hidden');
+  document.getElementById('reportToolbar')?.classList.remove('hidden');
+  document.getElementById('actionsImgBtn')?.classList.remove('hidden');
+  const pUpload = document.getElementById('meetingPhotoUploadBtn'); if(pUpload) pUpload.style.display='';
+  // 파일 생성 버튼 표시
+  ['minutesCreateBtn','changesCreateBtn','planFileCreateBtn','photosCreateBtn','reportCreateBtn'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.classList.remove('hidden');
+  });
+}
+
+function disableMeetingDetailEdit(){
+  ['detailTitle','detailParticipants','detailAgenda','detailDecisions','detailChanges'].forEach(id=>{ const el=document.getElementById(id); if(el) el.contentEditable='false'; });
+  const dA=document.getElementById('detailActions'); if(dA) dA.setAttribute('readonly','true');
+  const dD=document.getElementById('detailDate'); if(dD){ dD.setAttribute('readonly','true'); dD.classList.add('display-mode'); }
+  const planEditor=document.getElementById('detailPlan'); if(planEditor) planEditor.contentEditable='false';
+  const reportEditor=document.getElementById('detailReport'); if(reportEditor) reportEditor.contentEditable='false';
+  document.getElementById('planToolbar')?.classList.add('hidden');
+  document.getElementById('reportToolbar')?.classList.add('hidden');
+  document.getElementById('actionsImgBtn')?.classList.add('hidden');
+  const pUpload = document.getElementById('meetingPhotoUploadBtn'); if(pUpload) pUpload.style.display='none';
+  // 파일 생성 버튼 숨김
+  ['minutesCreateBtn','changesCreateBtn','planFileCreateBtn','photosCreateBtn','reportCreateBtn'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.classList.add('hidden');
+  });
+}
+
+// ══════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════
+function showSection(section, el){
+  document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
+  if(el) el.classList.add('active');
+  else document.querySelector(`[data-section="${section}"]`)?.classList.add('active');
+  document.querySelectorAll('[id^="section-"]').forEach(s=>s.classList.add('hidden'));
+  const sec=document.getElementById('section-'+section); if(sec) sec.classList.remove('hidden');
+  const titles={overview:'프로젝트 개요',meetings:'회의록',progress:'진행현황',budget:'예산 관리'};
+  const bcs={overview:'개요',meetings:'회의록',progress:'진행현황',budget:'예산'};
+  const custom=appData.customMenus.find(m=>m.id===section);
+  document.getElementById('page-title').textContent = custom?custom.name:(titles[section]||'');
+  document.getElementById('breadcrumb-current').textContent = custom?custom.name:(bcs[section]||'');
+  if(section==='progress') setTimeout(()=>{ initProgressChart(); initPlanChart(); },120);
+  if(section==='budget') setTimeout(()=>{ initBudgetChart(); },120);
+}
+
+// ══════════════════════════════════════════
+//  TEAM
+// ══════════════════════════════════════════
+function renderTeam(){
+  const grid=document.getElementById('teamGrid'); grid.innerHTML='';
+  appData.team.forEach((m,i)=>{
+    const div=document.createElement('div'); div.className='team-member';
+    const avatarContent = m.photo?`<img src="${m.photo}" alt="${m.name}"/>`:`<span>${m.avatar||m.name.substring(0,2)}</span>`;
+    div.innerHTML=`
+      ${editMode?`<button class="delete-row-btn" onclick="deleteTeamMember(${i})" style="position:absolute;top:6px;right:6px;padding:3px 7px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>`:''}
+      <div class="avatar-wrap" onclick="${editMode?`openPhotoModal(${i})`:''}">
+        <div class="avatar ${m.photo?'':m.color}">${avatarContent}</div>
+        ${editMode?`<div class="avatar-upload-overlay"><svg viewBox="0 0 24 24" stroke-width="2" fill="none"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg></div>`:''}
+      </div>
+      <div class="team-name" contenteditable="${editMode}" onblur="updateTeamMember(${i},'name',this.textContent)" style="outline:none;">${m.name}</div>
+      <div class="team-role" contenteditable="${editMode}" onblur="updateTeamMember(${i},'role',this.textContent)" style="outline:none;">${m.role}</div>
+      <div style="font-size:11px;color:var(--indigo-400);margin-top:4px;display:flex;align-items:center;justify-content:center;gap:4px;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.65 3.38 2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.66a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+        <span contenteditable="${editMode}" onblur="updateTeamMember(${i},'phone',this.textContent)" style="outline:none;min-width:80px;text-align:center;" data-placeholder="전화번호">${m.phone||'전화번호 없음'}</span>
+      </div>`;
+    grid.appendChild(div);
+  });
+  document.getElementById('teamCount').textContent = appData.team.length+'명';
+}
+function renderAllTeamTable(){
+  const tbody=document.getElementById('allTeamBody'); tbody.innerHTML='';
+  appData.team.forEach((m,i)=>{ const tr=document.createElement('tr'); tr.innerHTML=`<td style="color:var(--gray-400);font-size:12px;">${i+1}</td><td style="font-weight:600;">${m.name}</td><td>${m.role}</td><td style="color:var(--gray-600);">${editMode?`<input type="text" value="${m.phone||''}" placeholder="010-0000-0000" class="editable-field" onchange="updateTeamMember(${i},'phone',this.value)" style="width:140px;"/>`:(m.phone||'-')}</td>`; tbody.appendChild(tr); });
+}
+function addTeamMember(){ const c=['indigo','orange','emerald','purple','pink','cyan']; appData.team.push({name:'새 팀원',role:'역할',avatar:'새팀',color:c[Math.floor(Math.random()*c.length)],photo:'',phone:''}); renderTeam(); renderAllTeamTable(); saveData(); showToast('팀원 추가','success'); }
+function addTeamFromSheet(){ const name=document.getElementById('sheetName').value.trim(),role=document.getElementById('sheetRole').value.trim(),color=document.getElementById('sheetColor').value; if(!name){showToast('이름 입력','error');return;} appData.team.push({name,role:role||'역할 미정',avatar:name.substring(0,2),color,photo:'',phone:''}); document.getElementById('sheetName').value=''; document.getElementById('sheetRole').value=''; renderTeam(); renderAllTeamTable(); saveData(); showToast(`${name} 추가`,'success'); }
+function updateTeamMember(i,field,value){ if(field==='name'){appData.team[i].name=value;appData.team[i].avatar=value.substring(0,2);}else appData.team[i][field]=value; renderAllTeamTable(); saveData(); }
+function deleteTeamMember(i){ if(!confirm('삭제?'))return; appData.team.splice(i,1); renderTeam(); renderAllTeamTable(); saveData(); showToast('삭제됨','success'); }
+
+// ── Photo modal ──
+function openPhotoModal(i){ if(!editMode)return; currentPhotoIndex=i; document.getElementById('photoFileInput').value=''; document.getElementById('photoUrlInput').value=''; document.getElementById('photoModal').style.display='flex'; }
+function closePhotoModal(){ document.getElementById('photoModal').style.display='none'; currentPhotoIndex=-1; }
+function applyPhoto(){
+  const file=document.getElementById('photoFileInput').files[0],url=document.getElementById('photoUrlInput').value.trim();
+  if(file){ const r=new FileReader(); r.onload=e=>{ appData.team[currentPhotoIndex].photo=e.target.result; closePhotoModal(); renderTeam(); saveData(); showToast('사진 변경','success'); }; r.readAsDataURL(file); }
+  else if(url){ appData.team[currentPhotoIndex].photo=url; closePhotoModal(); renderTeam(); saveData(); showToast('사진 변경','success'); }
+  else showToast('파일 또는 URL 필요','error');
+}
+
+// ══════════════════════════════════════════
+//  MEETINGS
+// ══════════════════════════════════════════
+let currentMeetingCategory = 'all';
+
+function updateCategoryCounts(){
+  const total = appData.meetings.length;
+  const withChanges = appData.meetings.filter(m=>m.changes && m.changes.trim()).length;
+  const withPlan = appData.meetings.filter(m=>m.plan && m.plan.replace(/<[^>]+>/g,'').trim()).length;
+  const withPhotos = appData.meetings.filter(m=>m.photos && m.photos.length>0).length;
+  const withReport = appData.meetings.filter(m=>m.report && m.report.replace(/<[^>]+>/g,'').trim()).length;
+  const el=id=>document.getElementById(id);
+  if(el('cat-count-minutes')) el('cat-count-minutes').textContent = total+'건';
+  if(el('cat-count-changes')) el('cat-count-changes').textContent = withChanges+'건';
+  if(el('cat-count-plan')) el('cat-count-plan').textContent = withPlan+'건';
+  if(el('cat-count-photos')) el('cat-count-photos').textContent = withPhotos+'건';
+  if(el('cat-count-report')) el('cat-count-report').textContent = withReport+'건';
+  if(el('cat-count-all')) el('cat-count-all').textContent = total+'건';
+}
+
+function openMeetingCategory(cat){
+  currentMeetingCategory = cat;
+  const catNames = {minutes:'📋 회의록',changes:'🔄 변경사항',plan:'📊 수행계획서',photos:'🖼 회의 사진',report:'📄 보고서',all:'📁 전체 목록'};
+  document.getElementById('folderViewTitle').textContent = catNames[cat]||'회의록 목록';
+  renderMeetingsFolders();
+  document.getElementById('meetings-category-view').classList.add('hidden');
+  document.getElementById('meetings-folder-view').classList.remove('hidden');
+  document.getElementById('meetings-detail-view').classList.add('hidden');
+}
+
+function closeMeetingFolderView(){
+  document.getElementById('meetings-category-view').classList.remove('hidden');
+  document.getElementById('meetings-folder-view').classList.add('hidden');
+  document.getElementById('meetings-detail-view').classList.add('hidden');
+  updateCategoryCounts();
+}
+
+function renderMeetingsFolders(){
+  const grid=document.getElementById('meetingsFolderGrid'); grid.innerHTML='';
+  appData.meetings.forEach((m,i)=>{
+    const div=document.createElement('div'); div.className='meeting-folder';
+    div.innerHTML=`
+      <div class="meeting-folder-icon"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></div>
+      <div class="meeting-folder-title">${i+1}차 · ${m.title}</div>
+      <div class="meeting-folder-date">${m.date}</div>
+      ${editMode?`<button class="meeting-folder-delete" onclick="event.stopPropagation();deleteMeeting(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>`:''}`;
+    div.addEventListener('click',()=>openMeetingDetail(i, currentMeetingCategory)); grid.appendChild(div);
+  });
+}
+
+function openMeetingDetail(i, cat){
+  currentMeetingIndex=i; currentMeetingTab='minutes';
+  const m=appData.meetings[i];
+  document.getElementById('detailTitle').textContent=m.title;
+  // ① 날짜 input
+  document.getElementById('detailDate').value=m.date;
+  document.getElementById('detailParticipants').textContent=m.participants;
+  document.getElementById('detailDecisions').textContent=m.decisions;
+  document.getElementById('detailAgenda').textContent=m.agenda||'';
+  document.getElementById('detailChanges').textContent=m.changes||'';
+  // textarea
+  const ta=document.getElementById('detailActions'); ta.value=m.actions||''; setTimeout(()=>autoGrow(ta),10);
+  // action images
+  renderActionImages(m.actionImages||[]);
+  // rich editors
+  document.getElementById('detailPlan').innerHTML=m.plan||'<p style="color:var(--gray-400);">내용을 입력하세요...</p>';
+  document.getElementById('detailReport').innerHTML=m.report||'<p style="color:var(--gray-400);">내용을 입력하세요...</p>';
+  renderAttachments('plan',m.planAttachments||[]);
+  renderAttachments('report',m.reportAttachments||[]);
+  renderMeetingPhotos(m.photos||[]);
+  // switch to category tab if specified
+  const tabId = (cat && cat !== 'all') ? cat : 'minutes';
+  switchMeetingTabById(tabId);
+  renderTabFileLists(m);
+  if(editMode){ enableMeetingDetailEdit(); } else { disableMeetingDetailEdit(); }
+  document.getElementById('meetings-folder-view').classList.add('hidden');
+  document.getElementById('meetings-detail-view').classList.remove('hidden');
+}
+
+function switchMeetingTab(tabId, el){
+  document.querySelectorAll('.meeting-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.meeting-tab-content').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+tabId).classList.add('active');
+  currentMeetingTab=tabId;
+}
+function switchMeetingTabById(tabId){
+  document.querySelectorAll('.meeting-tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.meeting-tab-content').forEach(c=>c.classList.remove('active'));
+  document.querySelectorAll('.meeting-tab')[['minutes','changes','plan','photos','report'].indexOf(tabId)]?.classList.add('active');
+  document.getElementById('tab-'+tabId)?.classList.add('active');
+  currentMeetingTab=tabId;
+}
+
+function closeMeetingDetail(){
+  if(editMode && currentMeetingIndex>=0) saveMeetingDetail();
+  document.getElementById('meetings-folder-view').classList.remove('hidden');
+  document.getElementById('meetings-detail-view').classList.add('hidden');
+  renderMeetingsFolders(); updateCategoryCounts(); currentMeetingIndex=-1;
+}
+
+function saveMeetingDetail(){
+  if(currentMeetingIndex<0) return;
+  const m=appData.meetings[currentMeetingIndex];
+  m.title=document.getElementById('detailTitle').textContent;
+  m.date=document.getElementById('detailDate').value; // ① save date
+  m.participants=document.getElementById('detailParticipants').textContent;
+  m.decisions=document.getElementById('detailDecisions').textContent;
+  m.agenda=document.getElementById('detailAgenda').textContent;
+  m.changes=document.getElementById('detailChanges').textContent;
+  m.actions=document.getElementById('detailActions').value;
+  m.plan=document.getElementById('detailPlan').innerHTML;
+  m.report=document.getElementById('detailReport').innerHTML;
+}
+
+// ── 탭별 파일 목록 렌더링 ──
+function renderTabFileLists(m){
+  const tabs = {
+    minutes: { id:'minutesFileList', key:'minutesFiles' },
+    changes: { id:'changesFileList', key:'changesFiles' },
+    plan:    { id:'planFileList',    key:'planFiles' },
+    photos:  { id:'photosFileList',  key:'photosFiles' },
+    report:  { id:'reportFileList',  key:'reportFiles' }
+  };
+  Object.entries(tabs).forEach(([tab, cfg])=>{
+    const el = document.getElementById(cfg.id); if(!el) return;
+    const files = m[cfg.key] || [];
+    if(files.length===0){ el.textContent='생성된 파일 없음'; return; }
+    el.innerHTML = files.map((f,fi)=>`
+      <span style="display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--gray-200);border-radius:6px;padding:3px 8px;margin:2px;font-size:11px;">
+        📄 ${f.name}
+        <a href="${f.data}" download="${f.name}" style="color:var(--indigo-600);font-size:10px;font-weight:600;text-decoration:none;">↓</a>
+        ${editMode?`<button onclick="deleteMeetingFile('${tab}',${fi})" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:11px;padding:0 2px;">×</button>`:''}
+      </span>`).join('');
+  });
+}
+
+// ── 탭별 파일 생성 (텍스트 내보내기) ──
+function createMeetingFile(tabType){
+  if(currentMeetingIndex<0){ showToast('회의록을 먼저 선택하세요','error'); return; }
+  const m = appData.meetings[currentMeetingIndex];
+  const tabNames = {minutes:'회의록',changes:'변경사항',plan:'수행계획서',photos:'회의사진',report:'보고서'};
+  const fileKeyMap = {minutes:'minutesFiles',changes:'changesFiles',plan:'planFiles',photos:'photosFiles',report:'reportFiles'};
+  const tabName = tabNames[tabType];
+  const fileKey = fileKeyMap[tabType];
+  if(!m[fileKey]) m[fileKey]=[];
+
+  // 콘텐츠 빌드
+  let content = '';
+  const dateStr = m.date || new Date().toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'});
+  const header = `═══════════════════════════════════════\n뉴트로닉스 프로젝트 | ${tabName}\n회의: ${m.title}  |  날짜: ${dateStr}\n═══════════════════════════════════════\n\n`;
+
+  if(tabType==='minutes'){
+    content = header
+      + `[참석자]\n${m.participants||'-'}\n\n`
+      + `[안건]\n${m.agenda||'-'}\n\n`
+      + `[주요 결정사항]\n${m.decisions||'-'}\n\n`
+      + `[액션 아이템]\n${m.actions||'-'}\n`;
+  } else if(tabType==='changes'){
+    content = header + `[변경사항 내역]\n${m.changes||'-'}\n`;
+  } else if(tabType==='plan'){
+    const planText = (m.plan||'').replace(/<[^>]+>/g,'').trim()||'-';
+    content = header + `[수행계획서]\n${planText}\n`;
+  } else if(tabType==='photos'){
+    content = header + `[회의 사진]\n총 ${(m.photos||[]).length}장의 사진이 등록되어 있습니다.\n(이미지는 대시보드에서 직접 확인하세요)\n`;
+  } else if(tabType==='report'){
+    const reportText = (m.report||'').replace(/<[^>]+>/g,'').trim()||'-';
+    content = header + `[보고서]\n${reportText}\n`;
+  }
+
+  const blob = new Blob([content],{type:'text/plain;charset=utf-8'});
+  const reader = new FileReader();
+  reader.onload = e => {
+    const seq = m[fileKey].length + 1;
+    const fname = `${m.title}_${tabName}_${seq}.txt`;
+    m[fileKey].push({name:fname, data:e.target.result});
+    saveData();
+    renderTabFileLists(m);
+    updateCategoryCounts();
+    showToast(`${tabName} 파일 생성 완료`, 'success');
+    // 브라우저 다운로드 트리거
+    const a=document.createElement('a'); a.href=e.target.result; a.download=fname; a.click();
+  };
+  reader.readAsDataURL(blob);
+}
+
+function deleteMeetingFile(tabType, fi){
+  if(currentMeetingIndex<0) return;
+  const m = appData.meetings[currentMeetingIndex];
+  const fileKeyMap = {minutes:'minutesFiles',changes:'changesFiles',plan:'planFiles',photos:'photosFiles',report:'reportFiles'};
+  const key = fileKeyMap[tabType];
+  if(!m[key]) return;
+  m[key].splice(fi,1);
+  saveData(); renderTabFileLists(m); showToast('파일 삭제됨','success');
+}
+
+function addMeeting(){ const today=new Date().toISOString().split('T')[0]; appData.meetings.push({date:today,title:'새 회의',participants:'',decisions:'',agenda:'',actions:'',changes:'',plan:'',report:'',planAttachments:[],reportAttachments:[],photos:[],actionImages:[],minutesFiles:[],changesFiles:[],planFiles:[],photosFiles:[],reportFiles:[]}); renderMeetingsFolders(); saveData(); updateMeetingCount(); updateCategoryCounts(); showToast('회의록 추가','success'); }
+function deleteMeeting(i){ if(!confirm('삭제?'))return; appData.meetings.splice(i,1); renderMeetingsFolders(); saveData(); updateMeetingCount(); updateCategoryCounts(); showToast('삭제됨','success'); }
+
+// ── Auto-grow textarea ── (⑦)
+function autoGrow(el){ el.style.height='auto'; el.style.height=(el.scrollHeight+2)+'px'; }
+
+// ── Action images ── (⑦)
+function addActionImages(ev){
+  const files=Array.from(ev.target.files);
+  const m=appData.meetings[currentMeetingIndex];
+  if(!m.actionImages) m.actionImages=[];
+  files.forEach(f=>{ const r=new FileReader(); r.onload=e=>{ m.actionImages.push(e.target.result); renderActionImages(m.actionImages); saveData(); }; r.readAsDataURL(f); });
+  ev.target.value='';
+}
+function renderActionImages(imgs){
+  const grid=document.getElementById('actionsImageGrid'); grid.innerHTML='';
+  (imgs||[]).forEach((src,i)=>{
+    const div=document.createElement('div'); div.className='photo-item';
+    div.innerHTML=`<img src="${src}"/>${editMode?`<button class="photo-delete" onclick="deleteActionImage(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>`:''}`;
+    grid.appendChild(div);
+  });
+}
+function deleteActionImage(i){ const m=appData.meetings[currentMeetingIndex]; m.actionImages.splice(i,1); renderActionImages(m.actionImages); saveData(); }
+
+// ── Meeting photos ── (⑨)
+function uploadMeetingPhotos(ev){
+  const files=Array.from(ev.target.files);
+  const m=appData.meetings[currentMeetingIndex];
+  if(!m.photos) m.photos=[];
+  files.forEach(f=>{ const r=new FileReader(); r.onload=e=>{ m.photos.push(e.target.result); renderMeetingPhotos(m.photos); saveData(); }; r.readAsDataURL(f); });
+  ev.target.value='';
+}
+function renderMeetingPhotos(photos){
+  const gal=document.getElementById('meetingPhotoGallery'); gal.innerHTML='';
+  (photos||[]).forEach((src,i)=>{
+    const div=document.createElement('div'); div.className='photo-item';
+    div.innerHTML=`<img src="${src}"/>${editMode?`<button class="photo-delete" onclick="deleteMeetingPhoto(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>`:''}`;
+    gal.appendChild(div);
+  });
+  const upZone=document.getElementById('meetingPhotoUploadBtn');
+  if(upZone) upZone.style.display = editMode ? '' : 'none';
+}
+function deleteMeetingPhoto(i){ const m=appData.meetings[currentMeetingIndex]; m.photos.splice(i,1); renderMeetingPhotos(m.photos); saveData(); }
+
+// ── Rich editor (⑧) ──
+function fmt(cmd){ document.getElementById('detailPlan').focus(); document.execCommand(cmd,false,null); }
+function fmtBlock(tag){ document.getElementById('detailPlan').focus(); document.execCommand('formatBlock',false,tag); }
+function fmtReport(cmd){ document.getElementById('detailReport').focus(); document.execCommand(cmd,false,null); }
+function fmtBlockReport(tag){ document.getElementById('detailReport').focus(); document.execCommand('formatBlock',false,tag); }
+
+function attachFileToPlan(ev, which){
+  const files=Array.from(ev.target.files);
+  const m=appData.meetings[currentMeetingIndex];
+  const key = which==='plan'?'planAttachments':'reportAttachments';
+  if(!m[key]) m[key]=[];
+  files.forEach(f=>{
+    const r=new FileReader(); r.onload=e=>{ m[key].push({name:f.name,data:e.target.result}); renderAttachments(which,m[key]); saveData(); }; r.readAsDataURL(f);
+  }); ev.target.value='';
+}
+function renderAttachments(which, attachments){
+  const container=document.getElementById(which+'Attachments'); if(!container) return;
+  container.innerHTML='';
+  (attachments||[]).forEach((att,i)=>{
+    const div=document.createElement('div'); div.className='file-attachment';
+    div.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><span class="file-attachment-name">${att.name}</span><a href="${att.data}" download="${att.name}" style="font-size:12px;color:var(--indigo-600);font-weight:600;text-decoration:none;">다운로드</a>${editMode?`<button class="file-attachment-del" onclick="deleteAttachment('${which}',${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>`:''}`;
+    container.appendChild(div);
+  });
+}
+function deleteAttachment(which,i){ const m=appData.meetings[currentMeetingIndex]; const key=which==='plan'?'planAttachments':'reportAttachments'; m[key].splice(i,1); renderAttachments(which,m[key]); saveData(); }
+
+// ══════════════════════════════════════════
+//  MILESTONES
+// ══════════════════════════════════════════
+function renderMilestones(){
+  const tbody=document.getElementById('milestonesTableBody'); tbody.innerHTML='';
+  appData.milestones.forEach((ms,i)=>{
+    const tr=document.createElement('tr');
+    const phaseOpts=PHASES.map(p=>`<option value="${p}" ${ms.phase===p?'selected':''}>${p}</option>`).join('');
+    const phStyle=PHASE_COLORS[ms.phase]||'';
+    tr.innerHTML=`
+      <td>${editMode?`<select class="phase-select" style="${phStyle}" onchange="updateMilestone(${i},'phase',this.value)">${phaseOpts}</select>`:`<span class="badge" style="${phStyle}">${ms.phase}</span>`}</td>
+      <td><input type="text" value="${ms.task}" class="editable-field ${editMode?'':'display-mode'}" ${editMode?'':'readonly'} onchange="updateMilestone(${i},'task',this.value)"/></td>
+      <td><input type="text" value="${ms.owner}" class="editable-field ${editMode?'':'display-mode'}" ${editMode?'':'readonly'} onchange="updateMilestone(${i},'owner',this.value)" style="width:90px;"/></td>
+      <td><input type="text" value="${ms.period}" class="editable-field ${editMode?'':'display-mode'}" ${editMode?'':'readonly'} onchange="updateMilestone(${i},'period',this.value)" style="width:120px;"/></td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="progress-bar" style="width:90px;"><div class="progress-fill" style="width:${ms.progress}%"></div></div>
+          <!-- ② fix: wider input so 100 shows fully -->
+          <input type="number" value="${ms.progress}" min="0" max="100" class="editable-field ${editMode?'':'display-mode'} mono" ${editMode?'':'readonly'} onchange="updateMilestone(${i},'progress',parseInt(this.value))" style="width:62px;text-align:right;"/>%
+        </div>
+      </td>
+      <td><span class="badge ${ms.status}">${ms.status==='done'?'완료':ms.status==='progress'?'진행중':'예정'}</span></td>
+      <td style="text-align:center;">${i>0?`<button onclick="moveMilestoneUp(${i})" title="위로 이동" style="padding:4px 8px;border:1px solid var(--gray-300);border-radius:5px;background:#fff;cursor:pointer;font-size:12px;transition:all .15s;" onmouseover="this.style.background='var(--indigo-50)'" onmouseout="this.style.background='#fff'">↑</button>`:'<span style="color:var(--gray-300);">↑</span>'}</td>
+      <td class="${editMode?'':'hidden'}"><button class="delete-row-btn" onclick="deleteMilestone(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td>`;
+    tbody.appendChild(tr);
+  });
+  updateProgressChart();
+}
+function addMilestone(){ appData.milestones.push({phase:'개발',task:'새 작업',owner:'',period:'',progress:0,status:'pending'}); renderMilestones(); saveData(); showToast('추가됨','success'); }
+function updateMilestone(i,field,value){ appData.milestones[i][field]=value; if(field==='progress'){const p=parseInt(value)||0; appData.milestones[i].status=p===100?'done':p>0?'progress':'pending';} renderMilestones(); saveData(); }
+function deleteMilestone(i){ if(!confirm('삭제?'))return; appData.milestones.splice(i,1); renderMilestones(); saveData(); showToast('삭제됨','success'); }
+function moveMilestoneUp(i){ if(i<=0) return; const tmp=appData.milestones[i]; appData.milestones[i]=appData.milestones[i-1]; appData.milestones[i-1]=tmp; renderMilestones(); saveData(); showToast('순서 변경됨','success'); }
+
+// ══════════════════════════════════════════
+//  PLAN ITEMS (수행계획도) ④
+// ══════════════════════════════════════════
+function renderPlanItems(){
+  const tbody=document.getElementById('planTableBody'); if(!tbody) return; tbody.innerHTML='';
+  appData.planItems.forEach((p,i)=>{
+    const tr=document.createElement('tr');
+    const phaseOpts=PHASES.map(ph=>`<option value="${ph}" ${p.phase===ph?'selected':''}>${ph}</option>`).join('');
+    const phStyle=PHASE_COLORS[p.phase]||'';
+    const monthOpts=MONTH_NUMS.map(m=>`<option value="${m}" ${p.startMonth===m?'selected':''}>${parseInt(m)}월</option>`).join('');
+    const monthOptsE=MONTH_NUMS.map(m=>`<option value="${m}" ${p.endMonth===m?'selected':''}>${parseInt(m)}월</option>`).join('');
+    tr.innerHTML=`
+      <td>${editMode?`<select class="phase-select" style="${phStyle}" onchange="updatePlan(${i},'phase',this.value)">${phaseOpts}</select>`:`<span class="badge" style="${phStyle}">${p.phase}</span>`}</td>
+      <td><input type="text" value="${p.name}" class="editable-field ${editMode?'':'display-mode'}" ${editMode?'':'readonly'} onchange="updatePlan(${i},'name',this.value)"/></td>
+      <td><input type="text" value="${p.owner}" class="editable-field ${editMode?'':'display-mode'}" ${editMode?'':'readonly'} onchange="updatePlan(${i},'owner',this.value)" style="width:80px;"/></td>
+      <td>${editMode?`<select class="editable-field" onchange="updatePlan(${i},'startMonth',this.value)">${monthOpts}</select>`:`<span>${parseInt(p.startMonth)}월</span>`}</td>
+      <td>${editMode?`<select class="editable-field" onchange="updatePlan(${i},'endMonth',this.value)">${monthOptsE}</select>`:`<span>${parseInt(p.endMonth)}월</span>`}</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="progress-bar" style="width:90px;"><div class="progress-fill" style="width:${p.progress}%"></div></div>
+          <input type="number" value="${p.progress}" min="0" max="100" class="editable-field ${editMode?'':'display-mode'} mono" ${editMode?'':'readonly'} onchange="updatePlan(${i},'progress',parseInt(this.value))" style="width:62px;text-align:right;"/>%
+        </div>
+      </td>
+      <td><span class="badge ${p.status}">${p.status==='done'?'완료':p.status==='progress'?'진행중':'예정'}</span></td>
+      <td class="${editMode?'':'hidden'}"><button class="delete-row-btn" onclick="deletePlan(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td>`;
+    tbody.appendChild(tr);
+  });
+  updatePlanChart(); updateThisMonthCard();
+}
+function addPlanItem(){ appData.planItems.push({phase:'개발',name:'새 항목',owner:'',startMonth:'03',endMonth:'03',progress:0,status:'pending'}); renderPlanItems(); saveData(); showToast('추가됨','success'); }
+function updatePlan(i,field,value){ appData.planItems[i][field]=value; if(field==='progress'){const p=parseInt(value)||0; appData.planItems[i].status=p===100?'done':p>0?'progress':'pending';} renderPlanItems(); saveData(); }
+function deletePlan(i){ if(!confirm('삭제?'))return; appData.planItems.splice(i,1); renderPlanItems(); saveData(); showToast('삭제됨','success'); }
+
+// ⑤ 이번달 수행계획 카드 업데이트
+function updateThisMonthCard(){
+  const now=new Date(); const monthNum=String(now.getMonth()+1).padStart(2,'0');
+  document.getElementById('thisMonthCardTitle').textContent = `${parseInt(monthNum)}월 수행 계획`;
+  const tasks=appData.planItems.filter(p=>{
+    const s=parseInt(p.startMonth), e=parseInt(p.endMonth), m=parseInt(monthNum);
+    return m>=s && m<=e;
+  });
+  const container=document.getElementById('thisMonthTasks');
+  if(tasks.length===0){ container.innerHTML=`<div style="color:var(--gray-400);font-size:13px;">이번달 수행 항목이 없습니다</div>`; return; }
+  container.innerHTML=tasks.map(t=>`<div class="thismonth-task"><div class="thismonth-dot"></div><span><strong>${t.name}</strong> · ${t.owner||'-'} · ${t.progress}%</span></div>`).join('');
+}
+
+// ══════════════════════════════════════════
+//  BUDGET
+// ══════════════════════════════════════════
+function renderBudget(){
+  const tbody=document.getElementById('budgetTableBody'); tbody.innerHTML='';
+  appData.budget.items.forEach((item,i)=>{
+    const diff=item.actual-item.planned, diffColor=diff>0?'var(--orange-600)':diff<0?'var(--emerald-600)':'var(--gray-600)', diffText=diff===0?'-':(diff>0?'+':'')+diff.toLocaleString()+'원';
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td><input type="text" value="${item.category}" class="editable-field ${editMode?'':'display-mode'}" ${editMode?'':'readonly'} onchange="updateBudgetItem(${i},'category',this.value)"/></td>
+      <td class="mono"><input type="number" value="${item.planned}" class="editable-field ${editMode?'':'display-mode'} mono" ${editMode?'':'readonly'} onchange="updateBudgetItem(${i},'planned',parseInt(this.value))" style="width:120px;"/>원</td>
+      <td class="mono"><input type="number" value="${item.actual}" class="editable-field ${editMode?'':'display-mode'} mono" ${editMode?'':'readonly'} onchange="updateBudgetItem(${i},'actual',parseInt(this.value))" style="width:120px;"/>원</td>
+      <td class="mono" style="color:${diffColor};font-weight:600;">${diffText}</td>
+      <td><input type="text" value="${item.note}" class="editable-field ${editMode?'':'display-mode'}" ${editMode?'':'readonly'} onchange="updateBudgetItem(${i},'note',this.value)"/></td>
+      <td class="${editMode?'':'hidden'}"><button class="delete-row-btn" onclick="deleteBudgetItem(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td>`;
+    tbody.appendChild(tr);
+  });
+  updateBudgetSummary(); updateBudgetChart(); updateOverviewBudget();
+}
+function addBudgetItem(){ appData.budget.items.push({category:'새 항목',planned:0,actual:0,note:''}); renderBudget(); saveData(); showToast('추가됨','success'); }
+function updateBudgetItem(i,field,value){ appData.budget.items[i][field]=value; renderBudget(); saveData(); }
+function deleteBudgetItem(i){ if(!confirm('삭제?'))return; appData.budget.items.splice(i,1); renderBudget(); saveData(); showToast('삭제됨','success'); }
+function updateBudgetSummary(){
+  const total=parseInt(document.getElementById('totalBudget').value)||appData.budget.total;
+  const spent=appData.budget.items.reduce((s,it)=>s+(it.actual||0),0);
+  const rem=total-spent, pct=total>0?Math.round((rem/total)*100):0;
+  document.getElementById('spentBudget').textContent=spent.toLocaleString();
+  document.getElementById('remainingBudget').textContent=rem.toLocaleString();
+  document.getElementById('remainingPercent').textContent=pct;
+  const disp=document.getElementById('totalBudgetDisplay'); if(disp) disp.textContent=total.toLocaleString();
+}
+function updateOverviewBudget(){
+  const total=parseInt(document.getElementById('totalBudget').value)||appData.budget.total;
+  const spent=appData.budget.items.reduce((s,it)=>s+(it.actual||0),0);
+  const rem=total-spent, pct=total>0?Math.round((rem/total)*100):0;
+  document.getElementById('overviewRemainingBudget').textContent=rem.toLocaleString()+'원';
+  document.getElementById('overviewRemainingPct').textContent=pct;
+  document.getElementById('overviewBudgetBar').style.width=pct+'%';
+}
+function updateProgress(){ const v=parseInt(document.getElementById('progressValue').value)||68; document.getElementById('progressBar').style.width=v+'%'; }
+document.getElementById('progressValue')?.addEventListener('input',updateProgress);
+document.getElementById('totalBudget')?.addEventListener('input',()=>{ updateBudgetSummary(); updateOverviewBudget(); updateBudgetChart(); });
+
+// ══════════════════════════════════════════
+//  CHARTS
+// ══════════════════════════════════════════
+
+// ③ Monthly progress chart — 3월~12월, all milestones per month
+function buildProgressChartData(){
+  // For each month (3..12), collect all milestone items that overlap
+  const datasets=[];
+  const colors=['rgba(99,102,241,.8)','rgba(249,115,22,.8)','rgba(16,185,129,.8)','rgba(251,191,36,.8)','rgba(236,72,153,.8)','rgba(14,165,233,.8)','rgba(168,85,247,.8)','rgba(239,68,68,.8)'];
+
+  appData.milestones.forEach((ms,idx)=>{
+    const data=MONTH_NUMS.map(mNum=>{
+      // parse period like "03/01 - 05/31"
+      const match=ms.period.match(/(\d{2})\/\d{2}\s*-\s*(\d{2})\/\d{2}/);
+      if(match){
+        const sm=parseInt(match[1]), em=parseInt(match[2]), m=parseInt(mNum);
+        if(m>=sm && m<=em) return ms.progress;
+      }
+      return null;
+    });
+    datasets.push({label:ms.task.length>15?ms.task.substring(0,15)+'…':ms.task, data, backgroundColor:colors[idx%colors.length], borderColor:colors[idx%colors.length].replace('.8','1'), borderWidth:2, borderRadius:4, spanGaps:false});
+  });
+  return { labels:MONTHS, datasets };
+}
+
+function initProgressChart(){
+  const ctx=document.getElementById('progressChart'); if(!ctx) return;
+  const d=buildProgressChartData();
+  if(progressChartInstance) progressChartInstance.destroy();
+  progressChartInstance=new Chart(ctx,{
+    type:'bar',
+    data:d,
+    options:{
+      responsive:true,maintainAspectRatio:true,
+      plugins:{legend:{position:'top',labels:{font:{family:'Noto Sans KR',size:11},boxWidth:12}},
+        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y}%`}}},
+      scales:{
+        y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%',font:{family:'Noto Sans KR'}}},
+        x:{ticks:{font:{family:'Noto Sans KR'}}}
+      }
+    }
+  });
+}
+
+function updateProgressChart(){
+  if(!progressChartInstance){ return; }
+  const d=buildProgressChartData();
+  progressChartInstance.data=d;
+  progressChartInstance.update();
+}
+
+// ④ Plan chart — horizontal bar (이행률)
+function initPlanChart(){
+  const ctx=document.getElementById('planChart'); if(!ctx) return;
+  const { labels, data, colors } = getPlanChartData();
+  if(planChartInstance) planChartInstance.destroy();
+  planChartInstance=new Chart(ctx,{
+    type:'bar',
+    data:{ labels, datasets:[{ label:'이행률 (%)', data, backgroundColor:colors, borderColor:colors.map(c=>c.replace('.85','1')), borderWidth:2, borderRadius:6 }]},
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>`${c.parsed.x}%`}}},
+      scales:{
+        x:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%',font:{family:'Noto Sans KR'}}},
+        y:{ticks:{font:{family:'Noto Sans KR',size:12}}}
+      }
+    }
+  });
+  ctx.parentElement.style.height = Math.max(200, appData.planItems.length*48+60)+'px';
+}
+
+function getPlanChartData(){
+  const labels=appData.planItems.map(p=>p.name.length>18?p.name.substring(0,18)+'…':p.name);
+  const data=appData.planItems.map(p=>p.progress);
+  const colors=appData.planItems.map((_,i)=>CHART_COLORS[i%CHART_COLORS.length]);
+  return {labels,data,colors};
+}
+
+function updatePlanChart(){
+  if(!planChartInstance){ return; }
+  const {labels,data,colors}=getPlanChartData();
+  planChartInstance.data.labels=labels;
+  planChartInstance.data.datasets[0].data=data;
+  planChartInstance.data.datasets[0].backgroundColor=colors;
+  planChartInstance.update();
+  const ctx=document.getElementById('planChart');
+  if(ctx) ctx.parentElement.style.height=Math.max(200,appData.planItems.length*48+60)+'px';
+}
+
+// Budget chart
+function initBudgetChart(){
+  const ctx=document.getElementById('budgetChart'); if(!ctx) return;
+  const {labels,data}=getBudgetChartData();
+  if(budgetChartInstance) budgetChartInstance.destroy();
+  budgetChartInstance=new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:CHART_COLORS,borderColor:CHART_COLORS.map(c=>c.replace('.85','1')),borderWidth:2}]},options:{responsive:true,maintainAspectRatio:true,cutout:'68%',plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.label}: ${c.parsed.toLocaleString()}원`}}}}});
+  renderBudgetLegend(labels,data);
+}
+function getBudgetChartData(){ return {labels:appData.budget.items.map(it=>it.category),data:appData.budget.items.map(it=>it.actual||it.planned||0)}; }
+function updateBudgetChart(){ if(!budgetChartInstance) return; const {labels,data}=getBudgetChartData(); budgetChartInstance.data.labels=labels; budgetChartInstance.data.datasets[0].data=data; budgetChartInstance.update(); renderBudgetLegend(labels,data); }
+function renderBudgetLegend(labels,data){ const total=data.reduce((s,v)=>s+v,0),legend=document.getElementById('budgetLegend'); if(!legend) return; legend.innerHTML=labels.map((l,i)=>`<div class="budget-legend-item"><div class="budget-legend-dot" style="background:${CHART_COLORS[i%CHART_COLORS.length]};"></div><span class="budget-legend-label">${l}</span><span class="budget-legend-value">${(data[i]||0).toLocaleString()}원</span><span class="budget-legend-pct">${total>0?Math.round((data[i]/total)*100):0}%</span></div>`).join(''); }
+
+// ══════════════════════════════════════════
+//  CUSTOM MENUS
+// ══════════════════════════════════════════
+function toggleAddMenu(){ document.getElementById('addMenuForm').classList.toggle('hidden'); if(!document.getElementById('addMenuForm').classList.contains('hidden')) document.getElementById('newMenuName').focus(); }
+function addCustomMenu(){ const name=document.getElementById('newMenuName').value.trim(); if(!name){showToast('이름 입력','error');return;} const id='custom_'+Date.now(); appData.customMenus.push({id,name}); appData.customSections[id]={title:name,content:'<p>이곳에 내용을 입력하세요...</p>'}; document.getElementById('newMenuName').value=''; toggleAddMenu(); renderCustomMenus(); saveData(); showToast('메뉴 추가!','success'); }
+function deleteCustomMenu(id){ if(!confirm('삭제?'))return; appData.customMenus=appData.customMenus.filter(m=>m.id!==id); delete appData.customSections[id]; renderCustomMenus(); saveData(); showToast('삭제됨','success'); }
+function renderCustomMenus(){
+  const container=document.getElementById('navItemsContainer'); container.querySelectorAll('.custom-menu-item').forEach(el=>el.remove());
+  const contentArea=document.querySelector('.container'); contentArea.querySelectorAll('.custom-section').forEach(el=>el.remove());
+  appData.customMenus.forEach(menu=>{
+    const item=document.createElement('div'); item.className='nav-item custom-menu-item'; item.dataset.section=menu.id; item.onclick=()=>showSection(menu.id,item);
+    item.innerHTML=`<svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><span>${menu.name}</span>${editMode?`<div class="delete-btn" onclick="event.stopPropagation();deleteCustomMenu('${menu.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>`:''}`;
+    container.appendChild(item);
+    const section=document.createElement('div'); section.id=`section-${menu.id}`; section.className='custom-section hidden';
+    const sd=appData.customSections[menu.id]||{title:menu.name,content:''};
+    section.innerHTML=`<div class="table-container"><h2 contenteditable="${editMode}" class="editable-content" style="font-size:22px;font-weight:700;margin-bottom:16px;outline:none;">${sd.title}</h2><div contenteditable="${editMode}" class="editable-content" style="min-height:200px;line-height:1.8;outline:none;font-size:14px;">${sd.content}</div></div>`;
+    contentArea.appendChild(section);
+  });
+}
+
+// ══════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════
+function showToast(msg,type='info'){ const t=document.createElement('div'); t.style.cssText=`position:fixed;bottom:24px;right:24px;background:${type==='success'?'var(--emerald-500)':type==='error'?'#ef4444':'var(--indigo-600)'};color:#fff;padding:12px 20px;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:9999;animation:slideIn .3s ease-out;font-family:var(--font-main);font-size:14px;`; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>{ t.style.animation='slideOut .3s ease-out'; setTimeout(()=>t.remove(),300); },3000); }
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>
