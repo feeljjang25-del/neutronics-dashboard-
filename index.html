@@ -491,7 +491,7 @@ tbody tr:hover{background:var(--gray-50);}
                 <div class="table-title" id="folderViewTitle">회의록 목록</div>
               </div>
               <button id="addMeetingBtn" class="add-row-btn hidden" onclick="addMeeting()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>회의록 추가
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg><span id="addMeetingBtnLabel">회의록 추가</span>
               </button>
             </div>
             <div class="meetings-folder-grid" id="meetingsFolderGrid"></div>
@@ -857,8 +857,12 @@ function updateMeetingCount(){
 //  SAVE / LOAD
 // ══════════════════════════════════════════
 function loadData(){
-  const saved = localStorage.getItem('neutronics_v3');
-  if(!saved) return;
+  const saved = localStorage.getItem('neutronics_v5');
+  if(!saved){
+    // 구버전 데이터 삭제
+    localStorage.removeItem('neutronics_v3');
+    return;
+  }
   try{
     appData = JSON.parse(saved);
     loadDataFromAppData();
@@ -867,7 +871,7 @@ function loadData(){
 
 function saveData(){
   // 저장 직전 스냅샷 보관 (되돌리기용)
-  lastSavedSnapshot = localStorage.getItem('neutronics_v3') || null;
+  lastSavedSnapshot = localStorage.getItem('neutronics_v5') || null;
   const ov = appData.overview;
   ov.bannerTitle = document.getElementById('bannerTitle').textContent;
   ov.bannerDesc = document.getElementById('bannerDesc').textContent;
@@ -879,7 +883,7 @@ function saveData(){
   appData.budget.total = parseInt(document.getElementById('totalBudget').value)||26000000;
   if(currentMeetingIndex >= 0) saveMeetingDetail();
   appData.lastSaveDate = new Date().toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\. /g,'.').replace(/\.$/,'');
-  localStorage.setItem('neutronics_v3', JSON.stringify(appData));
+  localStorage.setItem('neutronics_v5', JSON.stringify(appData));
   updateLastSaveDisplay(); showToast('저장되었습니다!','success');
 }
 
@@ -1076,12 +1080,13 @@ let currentMeetingCategory = 'all';
 
 function updateCategoryCounts(){
   const total = appData.meetings.length;
-  const withChanges = appData.meetings.filter(m=>m.changes && m.changes.trim()).length;
-  const withPlan = appData.meetings.filter(m=>m.plan && m.plan.replace(/<[^>]+>/g,'').trim()).length;
-  const withPhotos = appData.meetings.filter(m=>m.photos && m.photos.length>0).length;
-  const withReport = appData.meetings.filter(m=>m.report && m.report.replace(/<[^>]+>/g,'').trim()).length;
+  const withMinutes = appData.meetings.filter(m=>meetingMatchesCategory(m, 'minutes')).length;
+  const withChanges = appData.meetings.filter(m=>meetingMatchesCategory(m, 'changes')).length;
+  const withPlan = appData.meetings.filter(m=>meetingMatchesCategory(m, 'plan')).length;
+  const withPhotos = appData.meetings.filter(m=>meetingMatchesCategory(m, 'photos')).length;
+  const withReport = appData.meetings.filter(m=>meetingMatchesCategory(m, 'report')).length;
   const el=id=>document.getElementById(id);
-  if(el('cat-count-minutes')) el('cat-count-minutes').textContent = total+'건';
+  if(el('cat-count-minutes')) el('cat-count-minutes').textContent = withMinutes+'건';
   if(el('cat-count-changes')) el('cat-count-changes').textContent = withChanges+'건';
   if(el('cat-count-plan')) el('cat-count-plan').textContent = withPlan+'건';
   if(el('cat-count-photos')) el('cat-count-photos').textContent = withPhotos+'건';
@@ -1092,7 +1097,10 @@ function updateCategoryCounts(){
 function openMeetingCategory(cat){
   currentMeetingCategory = cat;
   const catNames = {minutes:'📋 회의록',changes:'🔄 변경사항',plan:'📊 수행계획서',photos:'🖼 회의 사진',report:'📄 보고서',all:'📁 전체 목록'};
+  const catLabels = {minutes:'회의록 생성',changes:'변경사항 생성',plan:'수행계획서 생성',photos:'회의 사진 생성',report:'보고서 생성',all:'회의록 생성'};
   document.getElementById('folderViewTitle').textContent = catNames[cat]||'회의록 목록';
+  const labelEl = document.getElementById('addMeetingBtnLabel');
+  if(labelEl) labelEl.textContent = catLabels[cat]||'회의록 추가';
   renderMeetingsFolders();
   document.getElementById('meetings-category-view').classList.add('hidden');
   document.getElementById('meetings-folder-view').classList.remove('hidden');
@@ -1107,12 +1115,14 @@ function closeMeetingFolderView(){
 }
 
 function meetingMatchesCategory(m, cat){
-  if(cat==='all' || cat==='minutes') return true;
-  if(cat==='changes') return !!(m.changes && m.changes.trim()) || (m.changesFiles && m.changesFiles.length>0);
-  if(cat==='plan') return !!(m.plan && m.plan.replace(/<[^>]+>/g,'').trim()) || (m.planFiles && m.planFiles.length>0);
-  if(cat==='photos') return !!(m.photos && m.photos.length>0) || (m.photosFiles && m.photosFiles.length>0);
-  if(cat==='report') return !!(m.report && m.report.replace(/<[^>]+>/g,'').trim()) || (m.reportFiles && m.reportFiles.length>0);
-  return true;
+  if(cat==='all') return true;
+  // 각 카테고리는 자신의 내용이 있거나, 명시적으로 해당 카테고리로 생성된 경우에만 표시
+  if(cat==='minutes') return (m.category === 'minutes') || (!!(m.agenda || m.decisions || m.actions) || (m.minutesFiles && m.minutesFiles.length>0));
+  if(cat==='changes') return (m.category === 'changes') || (!!(m.changes && m.changes.trim()) || (m.changesFiles && m.changesFiles.length>0));
+  if(cat==='plan') return (m.category === 'plan') || (!!(m.plan && m.plan.replace(/<[^>]+>/g,'').trim()) || (m.planFiles && m.planFiles.length>0));
+  if(cat==='photos') return (m.category === 'photos') || (!!(m.photos && m.photos.length>0) || (m.photosFiles && m.photosFiles.length>0));
+  if(cat==='report') return (m.category === 'report') || (!!(m.report && m.report.replace(/<[^>]+>/g,'').trim()) || (m.reportFiles && m.reportFiles.length>0));
+  return false;
 }
 
 function renderMeetingsFolders(){
@@ -1286,7 +1296,26 @@ function deleteMeetingFile(tabType, fi){
   saveData(); renderTabFileLists(m); showToast('파일 삭제됨','success');
 }
 
-function addMeeting(){ const today=new Date().toISOString().split('T')[0]; appData.meetings.push({date:today,title:'새 회의',participants:'',decisions:'',agenda:'',actions:'',changes:'',plan:'',report:'',planAttachments:[],reportAttachments:[],photos:[],actionImages:[],minutesFiles:[],changesFiles:[],planFiles:[],photosFiles:[],reportFiles:[]}); renderMeetingsFolders(); saveData(); updateMeetingCount(); updateCategoryCounts(); showToast('회의록 추가','success'); }
+function addMeeting(){ 
+  const today=new Date().toISOString().split('T')[0]; 
+  const cat = currentMeetingCategory === 'all' ? 'minutes' : currentMeetingCategory;
+  const catNames = {minutes:'회의록',changes:'변경사항',plan:'수행계획서',photos:'회의사진',report:'보고서'};
+  const newTitle = '새 ' + (catNames[cat] || '문서');
+  
+  appData.meetings.push({
+    category: cat,
+    date: today,
+    title: newTitle,
+    participants:'',decisions:'',agenda:'',actions:'',changes:'',plan:'',report:'',
+    planAttachments:[],reportAttachments:[],photos:[],actionImages:[],
+    minutesFiles:[],changesFiles:[],planFiles:[],photosFiles:[],reportFiles:[]
+  }); 
+  renderMeetingsFolders(); 
+  saveData(); 
+  updateMeetingCount(); 
+  updateCategoryCounts(); 
+  showToast(catNames[cat] + ' 추가','success'); 
+}
 function deleteMeeting(i){ if(!confirm('삭제?'))return; appData.meetings.splice(i,1); renderMeetingsFolders(); saveData(); updateMeetingCount(); updateCategoryCounts(); showToast('삭제됨','success'); }
 
 // ── Auto-grow textarea ── (⑦)
