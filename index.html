@@ -8,6 +8,30 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDt4SqScrWgetg-94vb03axAy6MMwelyps",
+    authDomain: "mecha2026-32860.firebaseapp.com",
+    projectId: "mecha2026-32860",
+    storageBucket: "mecha2026-32860.firebasestorage.app",
+    messagingSenderId: "328886068637",
+    appId: "1:328886068637:web:7c841a987ba4c2634dbb74",
+    measurementId: "G-1JLBYRQQ38",
+    databaseURL: "https://mecha2026-32860-default-rtdb.asia-northeast1.firebasedatabase.app/"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  window.fbDB = db;
+  window.fbRef = ref;
+  window.fbSet = set;
+  window.fbOnValue = onValue;
+  window.fbUpdate = update;
+</script>
 <style>
 :root {
   --indigo-50:#eef2ff;--indigo-100:#e0e7ff;--indigo-200:#c7d2fe;--indigo-300:#a5b4fc;
@@ -978,22 +1002,45 @@ function updateMeetingCount(){
 // ══════════════════════════════════════════
 //  SAVE / LOAD
 // ══════════════════════════════════════════
+let isFirstLoad = true;
 function loadData(){
-  const saved = localStorage.getItem('neutronics_v5');
-  if(!saved){
-    // 구버전 데이터 삭제
-    localStorage.removeItem('neutronics_v3');
-    return;
-  }
-  try{
-    appData = JSON.parse(saved);
-    loadDataFromAppData();
-  }catch(e){ console.error(e); }
+  if(!window.fbDB) { setTimeout(loadData, 500); return; }
+  const dataRef = window.fbRef(window.fbDB, 'neutronics_v5');
+  window.fbOnValue(dataRef, (snapshot) => {
+    const data = snapshot.val();
+    if(data) {
+      appData = data;
+      loadDataFromAppData();
+      if(isFirstLoad) {
+        renderTeam(); renderAllTeamTable(); renderMeetingsFolders(); updateCategoryCounts();
+        renderMilestones(); renderPlanItems(); renderBudget(); renderCustomMenus();
+        updateProgress(); updateBudgetSummary(); updateOverviewBudget();
+        isFirstLoad = false;
+      } else {
+        // 실시간 업데이트 시 필요한 부분만 갱신 (편집 모드가 아닐 때만)
+        if(!editMode) {
+          renderTeam(); renderAllTeamTable(); renderMeetingsFolders(); updateCategoryCounts();
+          renderMilestones(); renderPlanItems(); renderBudget(); renderCustomMenus();
+          updateProgress(); updateBudgetSummary(); updateOverviewBudget();
+        }
+      }
+      updateLastSaveDisplay();
+    } else {
+      // Firebase에 데이터가 없는 경우, 기존 localStorage 데이터가 있다면 마이그레이션
+      const localSaved = localStorage.getItem('neutronics_v5');
+      if(localSaved) {
+        try {
+          appData = JSON.parse(localSaved);
+          saveData(); // Firebase에 업로드
+          console.log("Migrated data from localStorage to Firebase.");
+        } catch(e) { console.error("Migration failed:", e); }
+      }
+    }
+  });
 }
 
 function saveData(){
-  // 저장 직전 스냅샷 보관 (되돌리기용)
-  lastSavedSnapshot = localStorage.getItem('neutronics_v5') || null;
+  if(!window.fbDB) { showToast('DB 연결 대기 중...','error'); return; }
   const ov = appData.overview;
   ov.bannerTitle = document.getElementById('bannerTitle').textContent;
   ov.bannerDesc = document.getElementById('bannerDesc').textContent;
@@ -1004,9 +1051,17 @@ function saveData(){
   ov.milestoneDesc = document.getElementById('milestoneDesc').textContent;
   appData.budget.total = parseInt(document.getElementById('totalBudget').value)||26000000;
   if(currentMeetingIndex >= 0) saveMeetingDetail();
-  appData.lastSaveDate = new Date().toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).replace(/\. /g,'.').replace(/\.$/,'');
-  localStorage.setItem('neutronics_v5', JSON.stringify(appData));
-  updateLastSaveDisplay(); showToast('저장되었습니다!','success');
+  appData.lastSaveDate = new Date().toLocaleString('ko-KR',{timeZone:'Asia/Seoul'});
+  
+  window.fbSet(window.fbRef(window.fbDB, 'neutronics_v5'), appData)
+    .then(() => {
+      updateLastSaveDisplay(); 
+      showToast('클라우드 저장 완료!','success');
+    })
+    .catch((error) => {
+      console.error("Save failed:", error);
+      showToast('저장 실패','error');
+    });
 }
 
 function revertData(){
