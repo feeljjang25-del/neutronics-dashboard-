@@ -980,15 +980,11 @@ let appData = JSON.parse(JSON.stringify(defaultData));
 //  INIT
 // ══════════════════════════════════════════
 function init(){
+  // Firebase 데이터 로딩 시작
   loadData();
-  renderTeam(); renderAllTeamTable();
-  renderMeetingsFolders();
-  renderMilestones();
-  renderPlanItems();
-  renderBudget();
-  renderCustomMenus();
-  updateProgress(); updateBudgetSummary(); updateOverviewBudget();
-  updateThisMonthCard(); updateLastSaveDisplay(); updateMeetingCount(); updateCategoryCounts();
+  
+  // 초기 UI 틀만 렌더링 (데이터는 Firebase에서 오면 다시 그려짐)
+  updateLastSaveDisplay();
 }
 
 function updateLastSaveDisplay(){
@@ -1015,6 +1011,12 @@ function loadData(){
         renderTeam(); renderAllTeamTable(); renderMeetingsFolders(); updateCategoryCounts();
         renderMilestones(); renderPlanItems(); renderBudget(); renderCustomMenus();
         updateProgress(); updateBudgetSummary(); updateOverviewBudget();
+        
+        // 모든 차트 초기화 추가
+        initProgressChart();
+        initPlanChart();
+        initBudgetChart();
+        
         isFirstLoad = false;
       } else {
         // 실시간 업데이트 시 필요한 부분만 갱신 (편집 모드가 아닐 때만)
@@ -1022,6 +1024,11 @@ function loadData(){
           renderTeam(); renderAllTeamTable(); renderMeetingsFolders(); updateCategoryCounts();
           renderMilestones(); renderPlanItems(); renderBudget(); renderCustomMenus();
           updateProgress(); updateBudgetSummary(); updateOverviewBudget();
+          
+          // 모든 차트 업데이트 추가
+          updateProgressChart();
+          updatePlanChart();
+          updateBudgetChart();
         }
       }
       updateLastSaveDisplay();
@@ -1735,8 +1742,9 @@ function initProgressChart(){
 }
 
 function updateProgressChart(){
-  if(!progressChartInstance){ return; }
+  if(!progressChartInstance){ initProgressChart(); return; }
   const d=buildProgressChartData();
+  if(!d || !d.labels || d.labels.length === 0) return;
   progressChartInstance.data=d;
   progressChartInstance.update();
 }
@@ -1744,7 +1752,9 @@ function updateProgressChart(){
 // ④ Plan chart — horizontal bar (이행률)
 function initPlanChart(){
   const ctx=document.getElementById('planChart'); if(!ctx) return;
-  const { labels, data, colors } = getPlanChartData();
+  const chartData = getPlanChartData();
+  if(!chartData || !chartData.labels || chartData.labels.length === 0) return;
+  const { labels, data, colors } = chartData;
   if(planChartInstance) planChartInstance.destroy();
   planChartInstance=new Chart(ctx,{
     type:'bar',
@@ -1769,8 +1779,10 @@ function getPlanChartData(){
 }
 
 function updatePlanChart(){
-  if(!planChartInstance){ return; }
-  const {labels,data,colors}=getPlanChartData();
+  if(!planChartInstance){ initPlanChart(); return; }
+  const chartData = getPlanChartData();
+  if(!chartData || !chartData.labels || chartData.labels.length === 0) return;
+  const {labels,data,colors}=chartData;
   planChartInstance.data.labels=labels;
   planChartInstance.data.datasets[0].data=data;
   planChartInstance.data.datasets[0].backgroundColor=colors;
@@ -1788,7 +1800,7 @@ function initBudgetChart(){
   renderBudgetLegend(labels,data);
 }
 function getBudgetChartData(){ return {labels:appData.budget.items.map(it=>it.category),data:appData.budget.items.map(it=>it.actual||it.planned||0)}; }
-function updateBudgetChart(){ if(!budgetChartInstance) return; const {labels,data}=getBudgetChartData(); budgetChartInstance.data.labels=labels; budgetChartInstance.data.datasets[0].data=data; budgetChartInstance.update(); renderBudgetLegend(labels,data); }
+function updateBudgetChart(){ if(!budgetChartInstance){ initBudgetChart(); return; } const chartData=getBudgetChartData(); if(!chartData || !chartData.labels || chartData.labels.length === 0) return; const {labels,data}=chartData; budgetChartInstance.data.labels=labels; budgetChartInstance.data.datasets[0].data=data; budgetChartInstance.update(); renderBudgetLegend(labels,data); }
 function renderBudgetLegend(labels,data){ const total=data.reduce((s,v)=>s+v,0),legend=document.getElementById('budgetLegend'); if(!legend) return; legend.innerHTML=labels.map((l,i)=>`<div class="budget-legend-item"><div class="budget-legend-dot" style="background:${CHART_COLORS[i%CHART_COLORS.length]};"></div><span class="budget-legend-label">${l}</span><span class="budget-legend-value">${(data[i]||0).toLocaleString()}원</span><span class="budget-legend-pct">${total>0?Math.round((data[i]/total)*100):0}%</span></div>`).join(''); }
 
 // ══════════════════════════════════════════
