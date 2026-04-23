@@ -473,9 +473,9 @@ tbody tr:hover{background:var(--gray-50);}
         편집 되돌리기
       </button>
       <button class="btn btn-secondary" onclick="exportData()">내보내기</button>
-      <button class="btn btn-primary" onclick="saveData()">
+      <button class="btn btn-primary" id="saveBtn" onclick="saveData()" style="background:var(--emerald-600); border-color:var(--emerald-700);">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path><polyline points="17 21 17 13 7 13 7 21"></polyline><polyline points="7 3 7 8 15 8"></polyline></svg>
-        저장
+        <span id="saveBtnText">클라우드 저장</span>
       </button>
     </div>
   </header>
@@ -1048,6 +1048,12 @@ function loadData(){
 
 function saveData(){
   if(!window.fbDB) { showToast('DB 연결 대기 중...','error'); return; }
+  
+  const saveBtn = document.getElementById('saveBtn');
+  const saveBtnText = document.getElementById('saveBtnText');
+  if(saveBtn) saveBtn.disabled = true;
+  if(saveBtnText) saveBtnText.textContent = '저장 중...';
+
   const ov = appData.overview;
   ov.bannerTitle = document.getElementById('bannerTitle').textContent;
   ov.bannerDesc = document.getElementById('bannerDesc').textContent;
@@ -1064,10 +1070,14 @@ function saveData(){
     .then(() => {
       updateLastSaveDisplay(); 
       showToast('클라우드 저장 완료!','success');
+      if(saveBtn) saveBtn.disabled = false;
+      if(saveBtnText) saveBtnText.textContent = '클라우드 저장';
     })
     .catch((error) => {
       console.error("Save failed:", error);
       showToast('저장 실패','error');
+      if(saveBtn) saveBtn.disabled = false;
+      if(saveBtnText) saveBtnText.textContent = '클라우드 저장';
     });
 }
 
