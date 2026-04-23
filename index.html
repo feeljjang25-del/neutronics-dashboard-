@@ -13,15 +13,16 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
   import { getDatabase, ref, set, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+  // ✅ 새 Firebase 프로젝트 config (neutronics-dashboard / us-central1)
   const firebaseConfig = {
-    apiKey: "AIzaSyDt4SqScrWgetg-94vb03axAy6MMwelyps",
-    authDomain: "mecha2026-32860.firebaseapp.com",
-    projectId: "mecha2026-32860",
-    storageBucket: "mecha2026-32860.firebasestorage.app",
-    messagingSenderId: "328886068637",
-    appId: "1:328886068637:web:7c841a987ba4c2634dbb74",
-    measurementId: "G-1JLBYRQQ38",
-    databaseURL: "https://mecha2026-32860-default-rtdb.asia-northeast1.firebasedatabase.app/"
+    apiKey: "AIzaSyD9JjFG1Im8rv29qrNFxdXHLwqm-QGXC2U",
+    authDomain: "neutronics-dashboard.firebaseapp.com",
+    projectId: "neutronics-dashboard",
+    storageBucket: "neutronics-dashboard.firebasestorage.app",
+    messagingSenderId: "874928746382",
+    appId: "1:874928746382:web:dbb7a2752691c4cc40fedf",
+    measurementId: "G-W3D3W3QV6S",
+    databaseURL: "https://neutronics-dashboard-default-rtdb.firebaseio.com"
   };
 
   const app = initializeApp(firebaseConfig);
@@ -31,6 +32,10 @@
   window.fbSet = set;
   window.fbOnValue = onValue;
   window.fbUpdate = update;
+
+  // ✅ Firebase 연결 확인용 로그
+  console.log("✅ Firebase 초기화 완료:", firebaseConfig.projectId);
+  console.log("✅ DB URL:", firebaseConfig.databaseURL);
 </script>
 <style>
 :root {
@@ -365,11 +370,8 @@ tbody tr:hover{background:var(--gray-50);}
   .login-logo-wrap { margin-bottom: 24px; }
   .login-title { font-size: 20px; }
   
-  /* 테이블 모바일 대응 */
   .table-container { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   table { min-width: 600px; }
-  
-  /* 차트 크기 조정 */
   .chart-container { height: 300px !important; }
 }
 </style>
@@ -515,19 +517,16 @@ tbody tr:hover{background:var(--gray-50);}
             <div class="card-value" contenteditable="false" id="milestoneValue" class="editable-content" style="outline:none;">3 / 5</div>
             <div class="card-subtitle" contenteditable="false" id="milestoneDesc" class="editable-content" style="outline:none;">설계 단계 완료</div>
           </div>
-          <!-- 잔여예산 카드 -->
           <div class="card animate-fade-in stagger-4">
             <div class="card-header"><div class="card-icon amber"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg></div><div class="card-title">잔여 예산</div></div>
             <div class="card-value mono" id="overviewRemainingBudget" style="color:var(--emerald-600);font-size:20px;">-</div>
             <div class="card-subtitle">약 <span id="overviewRemainingPct">-</span>% 남음</div>
             <div class="progress-bar" style="margin-top:10px;"><div class="progress-fill" id="overviewBudgetBar" style="width:10%;background:linear-gradient(90deg,var(--emerald-500),var(--emerald-600));"></div></div>
           </div>
-          <!-- 이번달 수행계획 카드 -->
           <div class="card animate-fade-in stagger-4">
             <div class="card-header"><div class="card-icon purple"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div><div class="card-title" id="thisMonthCardTitle">이번달 수행 계획</div></div>
             <div class="thismonth-tasks" id="thisMonthTasks"><div style="color:var(--gray-400);font-size:13px;">수행계획도를 입력하세요</div></div>
           </div>
-          <!-- 작성된 회의록 카드 -->
           <div class="card animate-fade-in stagger-4" style="cursor:pointer;" onclick="showSection('meetings',document.querySelector('[data-section=meetings]'))">
             <div class="card-header"><div class="card-icon indigo"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div><div class="card-title">작성된 회의록</div></div>
             <div class="card-value" id="meetingCount">0건</div>
@@ -535,7 +534,6 @@ tbody tr:hover{background:var(--gray-50);}
           </div>
         </div>
 
-        <!-- 팀 구성 -->
         <div class="table-container animate-fade-in stagger-4">
           <div class="table-header">
             <div class="table-title">팀 구성</div>
@@ -555,7 +553,6 @@ tbody tr:hover{background:var(--gray-50);}
           <div class="team-grid" id="teamGrid"></div>
         </div>
 
-        <!-- 전체팀원 -->
         <div class="table-container" style="margin-top:24px;">
           <div class="table-title" style="margin-bottom:16px;">전체 팀원</div>
           <table><thead><tr><th>#</th><th>이름</th><th>역할</th><th>전화번호</th></tr></thead><tbody id="allTeamBody"></tbody></table>
@@ -564,68 +561,41 @@ tbody tr:hover{background:var(--gray-50);}
 
       <!-- ══════════════════════ MEETINGS ══════════════════════ -->
       <div id="section-meetings" class="hidden">
-
-        <!-- ★ Category dashboard (6 cards) -->
         <div id="meetings-category-view">
           <div class="cards-grid" style="grid-template-columns:repeat(auto-fill,minmax(210px,1fr));margin-bottom:28px;">
-            <!-- 1. 회의록 -->
             <div class="card" style="cursor:pointer;border-top:4px solid var(--indigo-500);" onclick="openMeetingCategory('minutes')">
-              <div class="card-header">
-                <div class="card-icon indigo"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div>
-                <div class="card-title">📋 회의록</div>
-              </div>
+              <div class="card-header"><div class="card-icon indigo"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg></div><div class="card-title">📋 회의록</div></div>
               <div class="card-value" id="cat-count-minutes" style="font-size:20px;">-</div>
               <div class="card-subtitle">회의 내용 · 결정사항</div>
             </div>
-            <!-- 2. 변경사항 -->
             <div class="card" style="cursor:pointer;border-top:4px solid var(--orange-500);" onclick="openMeetingCategory('changes')">
-              <div class="card-header">
-                <div class="card-icon orange"><svg viewBox="0 0 24 24" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 .49-3.45"></path></svg></div>
-                <div class="card-title">🔄 변경사항</div>
-              </div>
+              <div class="card-header"><div class="card-icon orange"><svg viewBox="0 0 24 24" stroke-width="2"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 .49-3.45"></path></svg></div><div class="card-title">🔄 변경사항</div></div>
               <div class="card-value" id="cat-count-changes" style="font-size:20px;">-</div>
               <div class="card-subtitle">설계 · 일정 변경 내역</div>
             </div>
-            <!-- 3. 수행계획서 -->
             <div class="card" style="cursor:pointer;border-top:4px solid var(--emerald-500);" onclick="openMeetingCategory('plan')">
-              <div class="card-header">
-                <div class="card-icon emerald"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div>
-                <div class="card-title">📊 수행계획서</div>
-              </div>
+              <div class="card-header"><div class="card-icon emerald"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg></div><div class="card-title">📊 수행계획서</div></div>
               <div class="card-value" id="cat-count-plan" style="font-size:20px;">-</div>
               <div class="card-subtitle">차기 수행 계획 문서</div>
             </div>
-            <!-- 4. 회의 사진 -->
             <div class="card" style="cursor:pointer;border-top:4px solid var(--amber-500);" onclick="openMeetingCategory('photos')">
-              <div class="card-header">
-                <div class="card-icon amber"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div>
-                <div class="card-title">🖼 회의 사진</div>
-              </div>
+              <div class="card-header"><div class="card-icon amber"><svg viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg></div><div class="card-title">🖼 회의 사진</div></div>
               <div class="card-value" id="cat-count-photos" style="font-size:20px;">-</div>
               <div class="card-subtitle">현장 사진 · 이미지</div>
             </div>
-            <!-- 5. 보고서 -->
             <div class="card" style="cursor:pointer;border-top:4px solid #7c3aed;" onclick="openMeetingCategory('report')">
-              <div class="card-header">
-                <div class="card-icon purple"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></div>
-                <div class="card-title">📄 보고서</div>
-              </div>
+              <div class="card-header"><div class="card-icon purple"><svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg></div><div class="card-title">📄 보고서</div></div>
               <div class="card-value" id="cat-count-report" style="font-size:20px;">-</div>
               <div class="card-subtitle">결과 · 진행 보고서</div>
             </div>
-            <!-- 6. 전체 회의록 목록 -->
             <div class="card" style="cursor:pointer;border-top:4px solid var(--gray-400);" onclick="openMeetingCategory('all')">
-              <div class="card-header">
-                <div class="card-icon" style="background:var(--gray-100);color:var(--gray-600);"><svg viewBox="0 0 24 24" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></div>
-                <div class="card-title">📁 전체 목록</div>
-              </div>
+              <div class="card-header"><div class="card-icon" style="background:var(--gray-100);color:var(--gray-600);"><svg viewBox="0 0 24 24" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></div><div class="card-title">📁 전체 목록</div></div>
               <div class="card-value" id="cat-count-all" style="font-size:20px;">-</div>
               <div class="card-subtitle">모든 회의록 보기</div>
             </div>
           </div>
         </div>
 
-        <!-- Folder list (category filtered) -->
         <div id="meetings-folder-view" class="hidden">
           <div class="table-container">
             <div class="table-header">
@@ -644,26 +614,22 @@ tbody tr:hover{background:var(--gray-50);}
           </div>
         </div>
 
-        <!-- Detail view -->
         <div id="meetings-detail-view" class="hidden">
           <div class="meeting-detail-panel">
             <div class="meeting-detail-back" onclick="closeMeetingDetail()">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
               회의록 목록으로 돌아가기
             </div>
-            <!-- Title + date row -->
             <div style="padding:20px 24px 0;display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap;">
               <div style="flex:1;min-width:200px;">
                 <div style="font-size:11px;font-weight:700;color:var(--indigo-600);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">제목</div>
                 <div class="detail-field" id="detailTitle" contenteditable="false" style="font-size:20px;font-weight:700;color:var(--gray-900);"></div>
               </div>
-              <!-- ① 날짜 수정 가능 -->
               <div style="min-width:160px;">
                 <div style="font-size:11px;font-weight:700;color:var(--indigo-600);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">날짜</div>
                 <input type="date" id="detailDate" class="editable-field display-mode" readonly style="font-size:14px;font-weight:500;width:160px;"/>
               </div>
             </div>
-            <!-- Tabs: ⑥ 5개 목차 -->
             <div class="meeting-tabs" style="margin-top:16px;">
               <div class="meeting-tab active" onclick="switchMeetingTab('minutes',this)">📋 회의록</div>
               <div class="meeting-tab" onclick="switchMeetingTab('changes',this)">🔄 변경사항</div>
@@ -672,9 +638,7 @@ tbody tr:hover{background:var(--gray-50);}
               <div class="meeting-tab" onclick="switchMeetingTab('report',this)">📄 보고서</div>
             </div>
 
-            <!-- Tab: 회의록 -->
             <div id="tab-minutes" class="meeting-tab-content active">
-              <!-- 회의록 파일 생성 -->
               <div class="tab-file-bar" id="minutesFileBar" style="background:var(--indigo-50);border:1px solid var(--indigo-200);border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
                 <div style="font-size:12px;font-weight:700;color:var(--indigo-700);">📋 회의록 파일</div>
                 <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -699,7 +663,6 @@ tbody tr:hover{background:var(--gray-50);}
               </div>
             </div>
 
-            <!-- Tab: 변경사항 -->
             <div id="tab-changes" class="meeting-tab-content">
               <div class="tab-file-bar" style="background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
                 <div style="font-size:12px;font-weight:700;color:var(--orange-700);">🔄 변경사항 파일</div>
@@ -714,7 +677,6 @@ tbody tr:hover{background:var(--gray-50);}
               </div>
             </div>
 
-            <!-- Tab: 수행계획서 -->
             <div id="tab-plan" class="meeting-tab-content">
               <div class="tab-file-bar" style="background:#ecfdf5;border:1px solid #a7f3d0;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
                 <div style="font-size:12px;font-weight:700;color:var(--emerald-700);">📊 수행계획서 파일</div>
@@ -745,7 +707,6 @@ tbody tr:hover{background:var(--gray-50);}
               <div id="planAttachments" style="margin-top:12px;"></div>
             </div>
 
-            <!-- Tab: 회의 사진 -->
             <div id="tab-photos" class="meeting-tab-content">
               <div class="tab-file-bar" style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
                 <div style="font-size:12px;font-weight:700;color:#92400e;">🖼 회의 사진 파일</div>
@@ -764,7 +725,6 @@ tbody tr:hover{background:var(--gray-50);}
               </label>
             </div>
 
-            <!-- Tab: 보고서 -->
             <div id="tab-report" class="meeting-tab-content">
               <div class="tab-file-bar" style="background:#f5f3ff;border:1px solid #ddd6fe;border-radius:10px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
                 <div style="font-size:12px;font-weight:700;color:#7c3aed;">📄 보고서 파일</div>
@@ -794,14 +754,12 @@ tbody tr:hover{background:var(--gray-50);}
               <div id="detailReport" class="rich-editor" contenteditable="false"></div>
               <div id="reportAttachments" style="margin-top:12px;"></div>
             </div>
-
           </div>
         </div>
       </div>
 
       <!-- ══════════════════════ PROGRESS ══════════════════════ -->
       <div id="section-progress" class="hidden">
-        <!-- 프로젝트 진행과정 -->
         <div class="table-container">
           <div class="table-header">
             <div class="table-title">프로젝트 진행과정</div>
@@ -821,7 +779,6 @@ tbody tr:hover{background:var(--gray-50);}
           </div>
         </div>
 
-        <!-- ③ 월별 진행 현황 (3월~12월, 항목별) -->
         <div class="chart-container">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
             <div class="table-title">월별 진행 현황 (3월~12월)</div>
@@ -830,7 +787,6 @@ tbody tr:hover{background:var(--gray-50);}
           <canvas id="progressChart"></canvas>
         </div>
 
-        <!-- ④ 수행계획도 -->
         <div class="table-container" style="margin-top:24px;">
           <div class="table-header">
             <div class="table-title">프로젝트 수행계획도</div>
@@ -838,7 +794,6 @@ tbody tr:hover{background:var(--gray-50);}
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>항목 추가
             </button>
           </div>
-          <!-- 수행계획도 입력 대시보드 -->
           <div style="overflow-x:auto;">
             <table style="min-width:800px;">
               <thead><tr>
@@ -850,7 +805,6 @@ tbody tr:hover{background:var(--gray-50);}
           </div>
         </div>
 
-        <!-- ④ 수행계획도 간트 차트 -->
         <div class="chart-container">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
             <div class="table-title">수행계획도 이행률</div>
@@ -897,12 +851,12 @@ tbody tr:hover{background:var(--gray-50);}
         </div>
       </div>
 
-    </div><!-- /container -->
-  </div><!-- /content -->
+    </div>
+  </div>
 </main>
-</div><!-- /dashboard -->
+</div>
 
-<!-- Photo Modal (team) -->
+<!-- Photo Modal -->
 <div id="photoModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;">
   <div style="background:#fff;border-radius:16px;padding:28px;width:340px;">
     <h3 style="font-size:16px;font-weight:700;margin-bottom:16px;">팀원 사진 변경</h3>
@@ -926,7 +880,7 @@ let currentMeetingTab = 'minutes';
 let progressChartInstance = null;
 let planChartInstance = null;
 let budgetChartInstance = null;
-let lastSavedSnapshot = null; // 편집 되돌리기용 스냅샷
+let lastSavedSnapshot = null;
 
 const CHART_COLORS = ['rgba(99,102,241,.85)','rgba(249,115,22,.85)','rgba(16,185,129,.85)','rgba(251,191,36,.85)','rgba(236,72,153,.85)','rgba(14,165,233,.85)','rgba(168,85,247,.85)','rgba(239,68,68,.85)','rgba(20,184,166,.85)','rgba(234,179,8,.85)'];
 const PHASE_COLORS = {'기획':'background:#e0e7ff;color:#4338ca;','설계':'background:#fed7aa;color:#c2410c;','개발':'background:#d1fae5;color:#065f46;','테스트':'background:#fef3c7;color:#92400e;','완료':'background:#e5e7eb;color:#374151;'};
@@ -934,9 +888,6 @@ const PHASES = ['기획','설계','개발','테스트','완료'];
 const MONTHS = ['3월','4월','5월','6월','7월','8월','9월','10월','11월','12월'];
 const MONTH_NUMS = ['03','04','05','06','07','08','09','10','11','12'];
 
-// ══════════════════════════════════════════
-//  DEFAULT DATA
-// ══════════════════════════════════════════
 const defaultData = {
   overview:{ bannerTitle:'취약계층을 위한 스마트 영양제 디스펜서', bannerDesc:'고령자의 건강한 삶을 지원하는 혁신적인 IoT 기반 자동 영양제 관리 시스템. 7가지 영양제 슬롯, 스마트 알림, 보호자 연동 기능을 제공합니다.', progressValue:68, progressSubtitle:'목표 대비 순조롭게 진행 중', teamDesc:'PM, HW, SW, 디자인, 전자', milestoneValue:'3 / 5', milestoneDesc:'설계 단계 완료' },
   team:[
@@ -977,14 +928,32 @@ const defaultData = {
 let appData = JSON.parse(JSON.stringify(defaultData));
 
 // ══════════════════════════════════════════
-//  INIT
+//  INIT - Firebase 준비 대기 후 시작
 // ══════════════════════════════════════════
 function init(){
-  // Firebase 데이터 로딩 시작
-  loadData();
-  
-  // 초기 UI 틀만 렌더링 (데이터는 Firebase에서 오면 다시 그려짐)
+  waitForFirebase().then(() => {
+    console.log('✅ Firebase 준비 완료, 데이터 로딩 시작');
+    loadData();
+  });
   updateLastSaveDisplay();
+}
+
+// ✅ Firebase 모듈 로딩 대기 (module import 비동기 문제 해결)
+function waitForFirebase(maxWait = 8000) {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const check = () => {
+      if (window.fbDB && window.fbRef && window.fbSet && window.fbOnValue) {
+        resolve();
+      } else if (Date.now() - start > maxWait) {
+        reject(new Error('Firebase 초기화 시간 초과'));
+        showToast('Firebase 연결 실패. 새로고침 해주세요.', 'error');
+      } else {
+        setTimeout(check, 100);
+      }
+    };
+    check();
+  });
 }
 
 function updateLastSaveDisplay(){
@@ -999,50 +968,44 @@ function updateMeetingCount(){
 //  SAVE / LOAD
 // ══════════════════════════════════════════
 let isFirstLoad = true;
+
 function loadData(){
-  if(!window.fbDB) { setTimeout(loadData, 500); return; }
   const dataRef = window.fbRef(window.fbDB, 'neutronics_v5');
   window.fbOnValue(dataRef, (snapshot) => {
     const data = snapshot.val();
     if(data) {
       appData = data;
+      // 스냅샷 저장 (되돌리기용)
+      lastSavedSnapshot = JSON.stringify(appData);
       loadDataFromAppData();
       if(isFirstLoad) {
         renderTeam(); renderAllTeamTable(); renderMeetingsFolders(); updateCategoryCounts();
         renderMilestones(); renderPlanItems(); renderBudget(); renderCustomMenus();
         updateProgress(); updateBudgetSummary(); updateOverviewBudget();
-        
-        // 모든 차트 초기화 추가
-        initProgressChart();
-        initPlanChart();
-        initBudgetChart();
-        
+        initProgressChart(); initPlanChart(); initBudgetChart();
         isFirstLoad = false;
+        console.log('✅ 데이터 로드 완료');
       } else {
-        // 실시간 업데이트 시 필요한 부분만 갱신 (편집 모드가 아닐 때만)
         if(!editMode) {
           renderTeam(); renderAllTeamTable(); renderMeetingsFolders(); updateCategoryCounts();
           renderMilestones(); renderPlanItems(); renderBudget(); renderCustomMenus();
           updateProgress(); updateBudgetSummary(); updateOverviewBudget();
-          
-          // 모든 차트 업데이트 추가
-          updateProgressChart();
-          updatePlanChart();
-          updateBudgetChart();
+          updateProgressChart(); updatePlanChart(); updateBudgetChart();
         }
       }
       updateLastSaveDisplay();
     } else {
-      // Firebase에 데이터가 없는 경우, 기존 localStorage 데이터가 있다면 마이그레이션
-      const localSaved = localStorage.getItem('neutronics_v5');
-      if(localSaved) {
-        try {
-          appData = JSON.parse(localSaved);
-          saveData(); // Firebase에 업로드
-          console.log("Migrated data from localStorage to Firebase.");
-        } catch(e) { console.error("Migration failed:", e); }
-      }
+      console.log('Firebase에 데이터 없음 → 기본 데이터 사용');
+      // 기본 데이터로 초기 렌더링
+      renderTeam(); renderAllTeamTable(); renderMeetingsFolders(); updateCategoryCounts();
+      renderMilestones(); renderPlanItems(); renderBudget(); renderCustomMenus();
+      updateProgress(); updateBudgetSummary(); updateOverviewBudget();
+      initProgressChart(); initPlanChart(); initBudgetChart();
+      isFirstLoad = false;
     }
+  }, (error) => {
+    console.error('Firebase 읽기 오류:', error);
+    showToast('데이터 읽기 실패: ' + error.message, 'error');
   });
 }
 
@@ -1068,14 +1031,15 @@ function saveData(){
   
   window.fbSet(window.fbRef(window.fbDB, 'neutronics_v5'), appData)
     .then(() => {
+      lastSavedSnapshot = JSON.stringify(appData);
       updateLastSaveDisplay(); 
-      showToast('클라우드 저장 완료!','success');
+      showToast('✅ 클라우드 저장 완료!','success');
       if(saveBtn) saveBtn.disabled = false;
       if(saveBtnText) saveBtnText.textContent = '클라우드 저장';
     })
     .catch((error) => {
-      console.error("Save failed:", error);
-      showToast('저장 실패','error');
+      console.error("저장 실패:", error);
+      showToast('❌ 저장 실패: ' + error.message,'error');
       if(saveBtn) saveBtn.disabled = false;
       if(saveBtnText) saveBtnText.textContent = '클라우드 저장';
     });
@@ -1129,7 +1093,7 @@ function loadDataFromAppData(){
 function exportData(){
   const a = document.createElement('a');
   a.href = URL.createObjectURL(new Blob([JSON.stringify(appData,null,2)],{type:'application/json'}));
-  a.download='neutronics_export_v3.json'; a.click(); showToast('내보내기 완료','success');
+  a.download='neutronics_export_v5.json'; a.click(); showToast('내보내기 완료','success');
 }
 
 // ══════════════════════════════════════════
@@ -1149,10 +1113,8 @@ function toggleEditMode(){
     ['addTeamBtn','addMeetingBtn','addMilestoneBtn','addBudgetBtn','addPlanBtn'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('hidden'); });
     ['teamInputSheet'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('hidden'); });
     ['milestoneActionsHeader','budgetActionsHeader','planActionsHeader'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.remove('hidden'); });
-    // show totalBudget input in edit mode
     const tbInput=document.getElementById('totalBudget'); if(tbInput){tbInput.style.display='inline';} 
     const tbDisp=document.getElementById('totalBudgetDisplay'); if(tbDisp){tbDisp.style.display='none';}
-    // meeting detail
     enableMeetingDetailEdit();
   } else {
     btn.classList.remove('btn-primary'); btn.classList.add('btn-secondary');
@@ -1164,7 +1126,6 @@ function toggleEditMode(){
     ['addTeamBtn','addMeetingBtn','addMilestoneBtn','addBudgetBtn','addPlanBtn'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.add('hidden'); });
     ['teamInputSheet'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.add('hidden'); });
     ['milestoneActionsHeader','budgetActionsHeader','planActionsHeader'].forEach(id=>{ const el=document.getElementById(id); if(el) el.classList.add('hidden'); });
-    // hide totalBudget input, show display span
     const tbInput=document.getElementById('totalBudget'); if(tbInput){tbInput.style.display='none';}
     const tbDisp=document.getElementById('totalBudgetDisplay'); if(tbDisp){tbDisp.style.display='';}
     disableMeetingDetailEdit();
@@ -1184,7 +1145,6 @@ function enableMeetingDetailEdit(){
   document.getElementById('reportToolbar')?.classList.remove('hidden');
   document.getElementById('actionsImgBtn')?.classList.remove('hidden');
   const pUpload = document.getElementById('meetingPhotoUploadBtn'); if(pUpload) pUpload.style.display='';
-  // 파일 생성 버튼 표시
   ['minutesCreateBtn','changesCreateBtn','planFileCreateBtn','photosCreateBtn','reportCreateBtn'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.classList.remove('hidden');
   });
@@ -1200,7 +1160,6 @@ function disableMeetingDetailEdit(){
   document.getElementById('reportToolbar')?.classList.add('hidden');
   document.getElementById('actionsImgBtn')?.classList.add('hidden');
   const pUpload = document.getElementById('meetingPhotoUploadBtn'); if(pUpload) pUpload.style.display='none';
-  // 파일 생성 버튼 숨김
   ['minutesCreateBtn','changesCreateBtn','planFileCreateBtn','photosCreateBtn','reportCreateBtn'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.classList.add('hidden');
   });
@@ -1215,8 +1174,6 @@ function showSection(section, el){
   else document.querySelector(`[data-section="${section}"]`)?.classList.add('active');
   document.querySelectorAll('[id^="section-"]').forEach(s=>s.classList.add('hidden'));
   const sec=document.getElementById('section-'+section); if(sec) sec.classList.remove('hidden');
-  
-  // 모바일에서 메뉴 클릭 시 자동으로 닫기
   if(window.innerWidth <= 768){
     const sidebarNav = document.getElementById('sidebarNav');
     if(sidebarNav) sidebarNav.classList.remove('show');
@@ -1248,7 +1205,7 @@ function renderTeam(){
       <div class="team-role" contenteditable="${editMode}" onblur="updateTeamMember(${i},'role',this.textContent)" style="outline:none;">${m.role}</div>
       <div style="font-size:11px;color:var(--indigo-400);margin-top:4px;display:flex;align-items:center;justify-content:center;gap:4px;">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.65 3.38 2 2 0 0 1 3.62 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.66a16 16 0 0 0 6 6l.92-.92a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-        <span contenteditable="${editMode}" onblur="updateTeamMember(${i},'phone',this.textContent)" style="outline:none;min-width:80px;text-align:center;" data-placeholder="전화번호">${m.phone||'전화번호 없음'}</span>
+        <span contenteditable="${editMode}" onblur="updateTeamMember(${i},'phone',this.textContent)" style="outline:none;min-width:80px;text-align:center;">${m.phone||'전화번호 없음'}</span>
       </div>`;
     grid.appendChild(div);
   });
@@ -1262,8 +1219,6 @@ function addTeamMember(){ const c=['indigo','orange','emerald','purple','pink','
 function addTeamFromSheet(){ const name=document.getElementById('sheetName').value.trim(),role=document.getElementById('sheetRole').value.trim(),color=document.getElementById('sheetColor').value; if(!name){showToast('이름 입력','error');return;} appData.team.push({name,role:role||'역할 미정',avatar:name.substring(0,2),color,photo:'',phone:''}); document.getElementById('sheetName').value=''; document.getElementById('sheetRole').value=''; renderTeam(); renderAllTeamTable(); saveData(); showToast(`${name} 추가`,'success'); }
 function updateTeamMember(i,field,value){ if(field==='name'){appData.team[i].name=value;appData.team[i].avatar=value.substring(0,2);}else appData.team[i][field]=value; renderAllTeamTable(); saveData(); }
 function deleteTeamMember(i){ if(!confirm('삭제?'))return; appData.team.splice(i,1); renderTeam(); renderAllTeamTable(); saveData(); showToast('삭제됨','success'); }
-
-// ── Photo modal ──
 function openPhotoModal(i){ if(!editMode)return; currentPhotoIndex=i; document.getElementById('photoFileInput').value=''; document.getElementById('photoUrlInput').value=''; document.getElementById('photoModal').style.display='flex'; }
 function closePhotoModal(){ document.getElementById('photoModal').style.display='none'; currentPhotoIndex=-1; }
 function applyPhoto(){
@@ -1280,18 +1235,14 @@ let currentMeetingCategory = 'all';
 
 function updateCategoryCounts(){
   const total = appData.meetings.length;
-  const withMinutes = appData.meetings.filter(m=>meetingMatchesCategory(m, 'minutes')).length;
-  const withChanges = appData.meetings.filter(m=>meetingMatchesCategory(m, 'changes')).length;
-  const withPlan = appData.meetings.filter(m=>meetingMatchesCategory(m, 'plan')).length;
-  const withPhotos = appData.meetings.filter(m=>meetingMatchesCategory(m, 'photos')).length;
-  const withReport = appData.meetings.filter(m=>meetingMatchesCategory(m, 'report')).length;
   const el=id=>document.getElementById(id);
-  if(el('cat-count-minutes')) el('cat-count-minutes').textContent = withMinutes+'건';
-  if(el('cat-count-changes')) el('cat-count-changes').textContent = withChanges+'건';
-  if(el('cat-count-plan')) el('cat-count-plan').textContent = withPlan+'건';
-  if(el('cat-count-photos')) el('cat-count-photos').textContent = withPhotos+'건';
-  if(el('cat-count-report')) el('cat-count-report').textContent = withReport+'건';
+  if(el('cat-count-minutes')) el('cat-count-minutes').textContent = appData.meetings.filter(m=>meetingMatchesCategory(m,'minutes')).length+'건';
+  if(el('cat-count-changes')) el('cat-count-changes').textContent = appData.meetings.filter(m=>meetingMatchesCategory(m,'changes')).length+'건';
+  if(el('cat-count-plan')) el('cat-count-plan').textContent = appData.meetings.filter(m=>meetingMatchesCategory(m,'plan')).length+'건';
+  if(el('cat-count-photos')) el('cat-count-photos').textContent = appData.meetings.filter(m=>meetingMatchesCategory(m,'photos')).length+'건';
+  if(el('cat-count-report')) el('cat-count-report').textContent = appData.meetings.filter(m=>meetingMatchesCategory(m,'report')).length+'건';
   if(el('cat-count-all')) el('cat-count-all').textContent = total+'건';
+  updateMeetingCount();
 }
 
 function openMeetingCategory(cat){
@@ -1316,7 +1267,6 @@ function closeMeetingFolderView(){
 
 function meetingMatchesCategory(m, cat){
   if(cat==='all') return true;
-  // 각 카테고리는 자신의 내용이 있거나, 명시적으로 해당 카테고리로 생성된 경우에만 표시
   if(cat==='minutes') return (m.category === 'minutes') || (!!(m.agenda || m.decisions || m.actions) || (m.minutesFiles && m.minutesFiles.length>0));
   if(cat==='changes') return (m.category === 'changes') || (!!(m.changes && m.changes.trim()) || (m.changesFiles && m.changesFiles.length>0));
   if(cat==='plan') return (m.category === 'plan') || (!!(m.plan && m.plan.replace(/<[^>]+>/g,'').trim()) || (m.planFiles && m.planFiles.length>0));
@@ -1327,18 +1277,11 @@ function meetingMatchesCategory(m, cat){
 
 function renderMeetingsFolders(){
   const grid=document.getElementById('meetingsFolderGrid'); grid.innerHTML='';
-  const filtered = appData.meetings
-    .map((m,i)=>({m,i}))
-    .filter(({m})=>meetingMatchesCategory(m, currentMeetingCategory));
-
+  const filtered = appData.meetings.map((m,i)=>({m,i})).filter(({m})=>meetingMatchesCategory(m, currentMeetingCategory));
   if(filtered.length===0){
-    grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:48px 0;color:var(--gray-400);">
-      <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 12px;display:block;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
-      <div style="font-size:14px;">이 카테고리에 등록된 문서가 없습니다.</div>
-    </div>`;
+    grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:48px 0;color:var(--gray-400);"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 12px;display:block;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><div style="font-size:14px;">이 카테고리에 등록된 문서가 없습니다.</div></div>`;
     return;
   }
-
   filtered.forEach(({m,i})=>{
     const div=document.createElement('div'); div.className='meeting-folder';
     div.innerHTML=`
@@ -1354,23 +1297,18 @@ function openMeetingDetail(i, cat){
   currentMeetingIndex=i; currentMeetingTab='minutes';
   const m=appData.meetings[i];
   document.getElementById('detailTitle').textContent=m.title;
-  // ① 날짜 input
   document.getElementById('detailDate').value=m.date;
   document.getElementById('detailParticipants').textContent=m.participants;
   document.getElementById('detailDecisions').textContent=m.decisions;
   document.getElementById('detailAgenda').textContent=m.agenda||'';
   document.getElementById('detailChanges').textContent=m.changes||'';
-  // textarea
   const ta=document.getElementById('detailActions'); ta.value=m.actions||''; setTimeout(()=>autoGrow(ta),10);
-  // action images
   renderActionImages(m.actionImages||[]);
-  // rich editors
   document.getElementById('detailPlan').innerHTML=m.plan||'<p style="color:var(--gray-400);">내용을 입력하세요...</p>';
   document.getElementById('detailReport').innerHTML=m.report||'<p style="color:var(--gray-400);">내용을 입력하세요...</p>';
   renderAttachments('plan',m.planAttachments||[]);
   renderAttachments('report',m.reportAttachments||[]);
   renderMeetingPhotos(m.photos||[]);
-  // switch to category tab if specified
   const tabId = (cat && cat !== 'all') ? cat : 'minutes';
   switchMeetingTabById(tabId);
   renderTabFileLists(m);
@@ -1405,7 +1343,7 @@ function saveMeetingDetail(){
   if(currentMeetingIndex<0) return;
   const m=appData.meetings[currentMeetingIndex];
   m.title=document.getElementById('detailTitle').textContent;
-  m.date=document.getElementById('detailDate').value; // ① save date
+  m.date=document.getElementById('detailDate').value;
   m.participants=document.getElementById('detailParticipants').textContent;
   m.decisions=document.getElementById('detailDecisions').textContent;
   m.agenda=document.getElementById('detailAgenda').textContent;
@@ -1415,29 +1353,16 @@ function saveMeetingDetail(){
   m.report=document.getElementById('detailReport').innerHTML;
 }
 
-// ── 탭별 파일 목록 렌더링 ──
 function renderTabFileLists(m){
-  const tabs = {
-    minutes: { id:'minutesFileList', key:'minutesFiles' },
-    changes: { id:'changesFileList', key:'changesFiles' },
-    plan:    { id:'planFileList',    key:'planFiles' },
-    photos:  { id:'photosFileList',  key:'photosFiles' },
-    report:  { id:'reportFileList',  key:'reportFiles' }
-  };
+  const tabs = {minutes:{id:'minutesFileList',key:'minutesFiles'},changes:{id:'changesFileList',key:'changesFiles'},plan:{id:'planFileList',key:'planFiles'},photos:{id:'photosFileList',key:'photosFiles'},report:{id:'reportFileList',key:'reportFiles'}};
   Object.entries(tabs).forEach(([tab, cfg])=>{
     const el = document.getElementById(cfg.id); if(!el) return;
     const files = m[cfg.key] || [];
     if(files.length===0){ el.textContent='생성된 파일 없음'; return; }
-    el.innerHTML = files.map((f,fi)=>`
-      <span style="display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--gray-200);border-radius:6px;padding:3px 8px;margin:2px;font-size:11px;">
-        📄 ${f.name}
-        <a href="${f.data}" download="${f.name}" style="color:var(--indigo-600);font-size:10px;font-weight:600;text-decoration:none;">↓</a>
-        ${editMode?`<button onclick="deleteMeetingFile('${tab}',${fi})" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:11px;padding:0 2px;">×</button>`:''}
-      </span>`).join('');
+    el.innerHTML = files.map((f,fi)=>`<span style="display:inline-flex;align-items:center;gap:4px;background:#fff;border:1px solid var(--gray-200);border-radius:6px;padding:3px 8px;margin:2px;font-size:11px;">📄 ${f.name}<a href="${f.data}" download="${f.name}" style="color:var(--indigo-600);font-size:10px;font-weight:600;text-decoration:none;">↓</a>${editMode?`<button onclick="deleteMeetingFile('${tab}',${fi})" style="background:none;border:none;cursor:pointer;color:#ef4444;font-size:11px;padding:0 2px;">×</button>`:''}</span>`).join('');
   });
 }
 
-// ── 탭별 파일 생성 (텍스트 내보내기) ──
 function createMeetingFile(tabType){
   if(currentMeetingIndex<0){ showToast('회의록을 먼저 선택하세요','error'); return; }
   const m = appData.meetings[currentMeetingIndex];
@@ -1446,41 +1371,22 @@ function createMeetingFile(tabType){
   const tabName = tabNames[tabType];
   const fileKey = fileKeyMap[tabType];
   if(!m[fileKey]) m[fileKey]=[];
-
-  // 콘텐츠 빌드
   let content = '';
   const dateStr = m.date || new Date().toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'});
   const header = `═══════════════════════════════════════\n뉴트로닉스 프로젝트 | ${tabName}\n회의: ${m.title}  |  날짜: ${dateStr}\n═══════════════════════════════════════\n\n`;
-
-  if(tabType==='minutes'){
-    content = header
-      + `[참석자]\n${m.participants||'-'}\n\n`
-      + `[안건]\n${m.agenda||'-'}\n\n`
-      + `[주요 결정사항]\n${m.decisions||'-'}\n\n`
-      + `[액션 아이템]\n${m.actions||'-'}\n`;
-  } else if(tabType==='changes'){
-    content = header + `[변경사항 내역]\n${m.changes||'-'}\n`;
-  } else if(tabType==='plan'){
-    const planText = (m.plan||'').replace(/<[^>]+>/g,'').trim()||'-';
-    content = header + `[수행계획서]\n${planText}\n`;
-  } else if(tabType==='photos'){
-    content = header + `[회의 사진]\n총 ${(m.photos||[]).length}장의 사진이 등록되어 있습니다.\n(이미지는 대시보드에서 직접 확인하세요)\n`;
-  } else if(tabType==='report'){
-    const reportText = (m.report||'').replace(/<[^>]+>/g,'').trim()||'-';
-    content = header + `[보고서]\n${reportText}\n`;
-  }
-
+  if(tabType==='minutes') content = header+`[참석자]\n${m.participants||'-'}\n\n[안건]\n${m.agenda||'-'}\n\n[주요 결정사항]\n${m.decisions||'-'}\n\n[액션 아이템]\n${m.actions||'-'}\n`;
+  else if(tabType==='changes') content = header+`[변경사항 내역]\n${m.changes||'-'}\n`;
+  else if(tabType==='plan') content = header+`[수행계획서]\n${(m.plan||'').replace(/<[^>]+>/g,'').trim()||'-'}\n`;
+  else if(tabType==='photos') content = header+`[회의 사진]\n총 ${(m.photos||[]).length}장의 사진이 등록되어 있습니다.\n`;
+  else if(tabType==='report') content = header+`[보고서]\n${(m.report||'').replace(/<[^>]+>/g,'').trim()||'-'}\n`;
   const blob = new Blob([content],{type:'text/plain;charset=utf-8'});
   const reader = new FileReader();
   reader.onload = e => {
     const seq = m[fileKey].length + 1;
     const fname = `${m.title}_${tabName}_${seq}.txt`;
     m[fileKey].push({name:fname, data:e.target.result});
-    saveData();
-    renderTabFileLists(m);
-    updateCategoryCounts();
+    saveData(); renderTabFileLists(m); updateCategoryCounts();
     showToast(`${tabName} 파일 생성 완료`, 'success');
-    // 브라우저 다운로드 트리거
     const a=document.createElement('a'); a.href=e.target.result; a.download=fname; a.click();
   };
   reader.readAsDataURL(blob);
@@ -1490,99 +1396,31 @@ function deleteMeetingFile(tabType, fi){
   if(currentMeetingIndex<0) return;
   const m = appData.meetings[currentMeetingIndex];
   const fileKeyMap = {minutes:'minutesFiles',changes:'changesFiles',plan:'planFiles',photos:'photosFiles',report:'reportFiles'};
-  const key = fileKeyMap[tabType];
-  if(!m[key]) return;
-  m[key].splice(fi,1);
-  saveData(); renderTabFileLists(m); showToast('파일 삭제됨','success');
+  const key = fileKeyMap[tabType]; if(!m[key]) return;
+  m[key].splice(fi,1); saveData(); renderTabFileLists(m); showToast('파일 삭제됨','success');
 }
 
 function addMeeting(){ 
   const today=new Date().toISOString().split('T')[0]; 
   const cat = currentMeetingCategory === 'all' ? 'minutes' : currentMeetingCategory;
   const catNames = {minutes:'회의록',changes:'변경사항',plan:'수행계획서',photos:'회의사진',report:'보고서'};
-  const newTitle = '새 ' + (catNames[cat] || '문서');
-  
-  appData.meetings.push({
-    category: cat,
-    date: today,
-    title: newTitle,
-    participants:'',decisions:'',agenda:'',actions:'',changes:'',plan:'',report:'',
-    planAttachments:[],reportAttachments:[],photos:[],actionImages:[],
-    minutesFiles:[],changesFiles:[],planFiles:[],photosFiles:[],reportFiles:[]
-  }); 
-  renderMeetingsFolders(); 
-  saveData(); 
-  updateMeetingCount(); 
-  updateCategoryCounts(); 
-  showToast(catNames[cat] + ' 추가','success'); 
+  appData.meetings.push({category:cat,date:today,title:'새 '+(catNames[cat]||'문서'),participants:'',decisions:'',agenda:'',actions:'',changes:'',plan:'',report:'',planAttachments:[],reportAttachments:[],photos:[],actionImages:[],minutesFiles:[],changesFiles:[],planFiles:[],photosFiles:[],reportFiles:[]}); 
+  renderMeetingsFolders(); saveData(); updateMeetingCount(); updateCategoryCounts(); showToast((catNames[cat]||'문서')+' 추가','success'); 
 }
 function deleteMeeting(i){ if(!confirm('삭제?'))return; appData.meetings.splice(i,1); renderMeetingsFolders(); saveData(); updateMeetingCount(); updateCategoryCounts(); showToast('삭제됨','success'); }
-
-// ── Auto-grow textarea ── (⑦)
 function autoGrow(el){ el.style.height='auto'; el.style.height=(el.scrollHeight+2)+'px'; }
-
-// ── Action images ── (⑦)
-function addActionImages(ev){
-  const files=Array.from(ev.target.files);
-  const m=appData.meetings[currentMeetingIndex];
-  if(!m.actionImages) m.actionImages=[];
-  files.forEach(f=>{ const r=new FileReader(); r.onload=e=>{ m.actionImages.push(e.target.result); renderActionImages(m.actionImages); saveData(); }; r.readAsDataURL(f); });
-  ev.target.value='';
-}
-function renderActionImages(imgs){
-  const grid=document.getElementById('actionsImageGrid'); grid.innerHTML='';
-  (imgs||[]).forEach((src,i)=>{
-    const div=document.createElement('div'); div.className='photo-item';
-    div.innerHTML=`<img src="${src}"/>${editMode?`<button class="photo-delete" onclick="deleteActionImage(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>`:''}`;
-    grid.appendChild(div);
-  });
-}
+function addActionImages(ev){ const files=Array.from(ev.target.files); const m=appData.meetings[currentMeetingIndex]; if(!m.actionImages) m.actionImages=[]; files.forEach(f=>{ const r=new FileReader(); r.onload=e=>{ m.actionImages.push(e.target.result); renderActionImages(m.actionImages); saveData(); }; r.readAsDataURL(f); }); ev.target.value=''; }
+function renderActionImages(imgs){ const grid=document.getElementById('actionsImageGrid'); grid.innerHTML=''; (imgs||[]).forEach((src,i)=>{ const div=document.createElement('div'); div.className='photo-item'; div.innerHTML=`<img src="${src}"/>${editMode?`<button class="photo-delete" onclick="deleteActionImage(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>`:''}`;grid.appendChild(div); }); }
 function deleteActionImage(i){ const m=appData.meetings[currentMeetingIndex]; m.actionImages.splice(i,1); renderActionImages(m.actionImages); saveData(); }
-
-// ── Meeting photos ── (⑨)
-function uploadMeetingPhotos(ev){
-  const files=Array.from(ev.target.files);
-  const m=appData.meetings[currentMeetingIndex];
-  if(!m.photos) m.photos=[];
-  files.forEach(f=>{ const r=new FileReader(); r.onload=e=>{ m.photos.push(e.target.result); renderMeetingPhotos(m.photos); saveData(); }; r.readAsDataURL(f); });
-  ev.target.value='';
-}
-function renderMeetingPhotos(photos){
-  const gal=document.getElementById('meetingPhotoGallery'); gal.innerHTML='';
-  (photos||[]).forEach((src,i)=>{
-    const div=document.createElement('div'); div.className='photo-item';
-    div.innerHTML=`<img src="${src}"/>${editMode?`<button class="photo-delete" onclick="deleteMeetingPhoto(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>`:''}`;
-    gal.appendChild(div);
-  });
-  const upZone=document.getElementById('meetingPhotoUploadBtn');
-  if(upZone) upZone.style.display = editMode ? '' : 'none';
-}
+function uploadMeetingPhotos(ev){ const files=Array.from(ev.target.files); const m=appData.meetings[currentMeetingIndex]; if(!m.photos) m.photos=[]; files.forEach(f=>{ const r=new FileReader(); r.onload=e=>{ m.photos.push(e.target.result); renderMeetingPhotos(m.photos); saveData(); }; r.readAsDataURL(f); }); ev.target.value=''; }
+function renderMeetingPhotos(photos){ const gal=document.getElementById('meetingPhotoGallery'); gal.innerHTML=''; (photos||[]).forEach((src,i)=>{ const div=document.createElement('div'); div.className='photo-item'; div.innerHTML=`<img src="${src}"/>${editMode?`<button class="photo-delete" onclick="deleteMeetingPhoto(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>`:''}`;gal.appendChild(div); }); const upZone=document.getElementById('meetingPhotoUploadBtn'); if(upZone) upZone.style.display = editMode ? '' : 'none'; }
 function deleteMeetingPhoto(i){ const m=appData.meetings[currentMeetingIndex]; m.photos.splice(i,1); renderMeetingPhotos(m.photos); saveData(); }
-
-// ── Rich editor (⑧) ──
 function fmt(cmd){ document.getElementById('detailPlan').focus(); document.execCommand(cmd,false,null); }
 function fmtBlock(tag){ document.getElementById('detailPlan').focus(); document.execCommand('formatBlock',false,tag); }
 function fmtReport(cmd){ document.getElementById('detailReport').focus(); document.execCommand(cmd,false,null); }
 function fmtBlockReport(tag){ document.getElementById('detailReport').focus(); document.execCommand('formatBlock',false,tag); }
-
-function attachFileToPlan(ev, which){
-  const files=Array.from(ev.target.files);
-  const m=appData.meetings[currentMeetingIndex];
-  const key = which==='plan'?'planAttachments':'reportAttachments';
-  if(!m[key]) m[key]=[];
-  files.forEach(f=>{
-    const r=new FileReader(); r.onload=e=>{ m[key].push({name:f.name,data:e.target.result}); renderAttachments(which,m[key]); saveData(); }; r.readAsDataURL(f);
-  }); ev.target.value='';
-}
-function renderAttachments(which, attachments){
-  const container=document.getElementById(which+'Attachments'); if(!container) return;
-  container.innerHTML='';
-  (attachments||[]).forEach((att,i)=>{
-    const div=document.createElement('div'); div.className='file-attachment';
-    div.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><span class="file-attachment-name">${att.name}</span><a href="${att.data}" download="${att.name}" style="font-size:12px;color:var(--indigo-600);font-weight:600;text-decoration:none;">다운로드</a>${editMode?`<button class="file-attachment-del" onclick="deleteAttachment('${which}',${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>`:''}`;
-    container.appendChild(div);
-  });
-}
+function attachFileToPlan(ev, which){ const files=Array.from(ev.target.files); const m=appData.meetings[currentMeetingIndex]; const key=which==='plan'?'planAttachments':'reportAttachments'; if(!m[key]) m[key]=[]; files.forEach(f=>{ const r=new FileReader(); r.onload=e=>{ m[key].push({name:f.name,data:e.target.result}); renderAttachments(which,m[key]); saveData(); }; r.readAsDataURL(f); }); ev.target.value=''; }
+function renderAttachments(which, attachments){ const container=document.getElementById(which+'Attachments'); if(!container) return; container.innerHTML=''; (attachments||[]).forEach((att,i)=>{ const div=document.createElement('div'); div.className='file-attachment'; div.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><span class="file-attachment-name">${att.name}</span><a href="${att.data}" download="${att.name}" style="font-size:12px;color:var(--indigo-600);font-weight:600;text-decoration:none;">다운로드</a>${editMode?`<button class="file-attachment-del" onclick="deleteAttachment('${which}',${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>`:''}`;container.appendChild(div); }); }
 function deleteAttachment(which,i){ const m=appData.meetings[currentMeetingIndex]; const key=which==='plan'?'planAttachments':'reportAttachments'; m[key].splice(i,1); renderAttachments(which,m[key]); saveData(); }
 
 // ══════════════════════════════════════════
@@ -1599,15 +1437,9 @@ function renderMilestones(){
       <td><input type="text" value="${ms.task}" class="editable-field ${editMode?'':'display-mode'}" ${editMode?'':'readonly'} onchange="updateMilestone(${i},'task',this.value)"/></td>
       <td><input type="text" value="${ms.owner}" class="editable-field ${editMode?'':'display-mode'}" ${editMode?'':'readonly'} onchange="updateMilestone(${i},'owner',this.value)" style="width:90px;"/></td>
       <td><input type="text" value="${ms.period}" class="editable-field ${editMode?'':'display-mode'}" ${editMode?'':'readonly'} onchange="updateMilestone(${i},'period',this.value)" style="width:120px;"/></td>
-      <td>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div class="progress-bar" style="width:90px;"><div class="progress-fill" style="width:${ms.progress}%"></div></div>
-          <!-- ② fix: wider input so 100 shows fully -->
-          <input type="number" value="${ms.progress}" min="0" max="100" class="editable-field ${editMode?'':'display-mode'} mono" ${editMode?'':'readonly'} onchange="updateMilestone(${i},'progress',parseInt(this.value))" style="width:62px;text-align:right;"/>%
-        </div>
-      </td>
+      <td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="width:90px;"><div class="progress-fill" style="width:${ms.progress}%"></div></div><input type="number" value="${ms.progress}" min="0" max="100" class="editable-field ${editMode?'':'display-mode'} mono" ${editMode?'':'readonly'} onchange="updateMilestone(${i},'progress',parseInt(this.value))" style="width:62px;text-align:right;"/>%</div></td>
       <td><span class="badge ${ms.status}">${ms.status==='done'?'완료':ms.status==='progress'?'진행중':'예정'}</span></td>
-      <td style="text-align:center;">${i>0?`<button onclick="moveMilestoneUp(${i})" title="위로 이동" style="padding:4px 8px;border:1px solid var(--gray-300);border-radius:5px;background:#fff;cursor:pointer;font-size:12px;transition:all .15s;" onmouseover="this.style.background='var(--indigo-50)'" onmouseout="this.style.background='#fff'">↑</button>`:'<span style="color:var(--gray-300);">↑</span>'}</td>
+      <td style="text-align:center;">${i>0?`<button onclick="moveMilestoneUp(${i})" style="padding:4px 8px;border:1px solid var(--gray-300);border-radius:5px;background:#fff;cursor:pointer;font-size:12px;">↑</button>`:'<span style="color:var(--gray-300);">↑</span>'}</td>
       <td class="${editMode?'':'hidden'}"><button class="delete-row-btn" onclick="deleteMilestone(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td>`;
     tbody.appendChild(tr);
   });
@@ -1619,7 +1451,7 @@ function deleteMilestone(i){ if(!confirm('삭제?'))return; appData.milestones.s
 function moveMilestoneUp(i){ if(i<=0) return; const tmp=appData.milestones[i]; appData.milestones[i]=appData.milestones[i-1]; appData.milestones[i-1]=tmp; renderMilestones(); saveData(); showToast('순서 변경됨','success'); }
 
 // ══════════════════════════════════════════
-//  PLAN ITEMS (수행계획도) ④
+//  PLAN ITEMS
 // ══════════════════════════════════════════
 function renderPlanItems(){
   const tbody=document.getElementById('planTableBody'); if(!tbody) return; tbody.innerHTML='';
@@ -1635,12 +1467,7 @@ function renderPlanItems(){
       <td><input type="text" value="${p.owner}" class="editable-field ${editMode?'':'display-mode'}" ${editMode?'':'readonly'} onchange="updatePlan(${i},'owner',this.value)" style="width:80px;"/></td>
       <td>${editMode?`<select class="editable-field" onchange="updatePlan(${i},'startMonth',this.value)">${monthOpts}</select>`:`<span>${parseInt(p.startMonth)}월</span>`}</td>
       <td>${editMode?`<select class="editable-field" onchange="updatePlan(${i},'endMonth',this.value)">${monthOptsE}</select>`:`<span>${parseInt(p.endMonth)}월</span>`}</td>
-      <td>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <div class="progress-bar" style="width:90px;"><div class="progress-fill" style="width:${p.progress}%"></div></div>
-          <input type="number" value="${p.progress}" min="0" max="100" class="editable-field ${editMode?'':'display-mode'} mono" ${editMode?'':'readonly'} onchange="updatePlan(${i},'progress',parseInt(this.value))" style="width:62px;text-align:right;"/>%
-        </div>
-      </td>
+      <td><div style="display:flex;align-items:center;gap:8px;"><div class="progress-bar" style="width:90px;"><div class="progress-fill" style="width:${p.progress}%"></div></div><input type="number" value="${p.progress}" min="0" max="100" class="editable-field ${editMode?'':'display-mode'} mono" ${editMode?'':'readonly'} onchange="updatePlan(${i},'progress',parseInt(this.value))" style="width:62px;text-align:right;"/>%</div></td>
       <td><span class="badge ${p.status}">${p.status==='done'?'완료':p.status==='progress'?'진행중':'예정'}</span></td>
       <td class="${editMode?'':'hidden'}"><button class="delete-row-btn" onclick="deletePlan(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td>`;
     tbody.appendChild(tr);
@@ -1651,14 +1478,10 @@ function addPlanItem(){ appData.planItems.push({phase:'개발',name:'새 항목'
 function updatePlan(i,field,value){ appData.planItems[i][field]=value; if(field==='progress'){const p=parseInt(value)||0; appData.planItems[i].status=p===100?'done':p>0?'progress':'pending';} renderPlanItems(); saveData(); }
 function deletePlan(i){ if(!confirm('삭제?'))return; appData.planItems.splice(i,1); renderPlanItems(); saveData(); showToast('삭제됨','success'); }
 
-// ⑤ 이번달 수행계획 카드 업데이트
 function updateThisMonthCard(){
   const now=new Date(); const monthNum=String(now.getMonth()+1).padStart(2,'0');
   document.getElementById('thisMonthCardTitle').textContent = `${parseInt(monthNum)}월 수행 계획`;
-  const tasks=appData.planItems.filter(p=>{
-    const s=parseInt(p.startMonth), e=parseInt(p.endMonth), m=parseInt(monthNum);
-    return m>=s && m<=e;
-  });
+  const tasks=appData.planItems.filter(p=>{ const s=parseInt(p.startMonth),e=parseInt(p.endMonth),m=parseInt(monthNum); return m>=s && m<=e; });
   const container=document.getElementById('thisMonthTasks');
   if(tasks.length===0){ container.innerHTML=`<div style="color:var(--gray-400);font-size:13px;">이번달 수행 항목이 없습니다</div>`; return; }
   container.innerHTML=tasks.map(t=>`<div class="thismonth-task"><div class="thismonth-dot"></div><span><strong>${t.name}</strong> · ${t.owner||'-'} · ${t.progress}%</span></div>`).join('');
@@ -1672,13 +1495,7 @@ function renderBudget(){
   appData.budget.items.forEach((item,i)=>{
     const diff=item.actual-item.planned, diffColor=diff>0?'var(--orange-600)':diff<0?'var(--emerald-600)':'var(--gray-600)', diffText=diff===0?'-':(diff>0?'+':'')+diff.toLocaleString()+'원';
     const tr=document.createElement('tr');
-    tr.innerHTML=`
-      <td><input type="text" value="${item.category}" class="editable-field ${editMode?'':'display-mode'}" ${editMode?'':'readonly'} onchange="updateBudgetItem(${i},'category',this.value)"/></td>
-      <td class="mono"><input type="number" value="${item.planned}" class="editable-field ${editMode?'':'display-mode'} mono" ${editMode?'':'readonly'} onchange="updateBudgetItem(${i},'planned',parseInt(this.value))" style="width:120px;"/>원</td>
-      <td class="mono"><input type="number" value="${item.actual}" class="editable-field ${editMode?'':'display-mode'} mono" ${editMode?'':'readonly'} onchange="updateBudgetItem(${i},'actual',parseInt(this.value))" style="width:120px;"/>원</td>
-      <td class="mono" style="color:${diffColor};font-weight:600;">${diffText}</td>
-      <td><input type="text" value="${item.note}" class="editable-field ${editMode?'':'display-mode'}" ${editMode?'':'readonly'} onchange="updateBudgetItem(${i},'note',this.value)"/></td>
-      <td class="${editMode?'':'hidden'}"><button class="delete-row-btn" onclick="deleteBudgetItem(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td>`;
+    tr.innerHTML=`<td><input type="text" value="${item.category}" class="editable-field ${editMode?'':'display-mode'}" ${editMode?'':'readonly'} onchange="updateBudgetItem(${i},'category',this.value)"/></td><td class="mono"><input type="number" value="${item.planned}" class="editable-field ${editMode?'':'display-mode'} mono" ${editMode?'':'readonly'} onchange="updateBudgetItem(${i},'planned',parseInt(this.value))" style="width:120px;"/>원</td><td class="mono"><input type="number" value="${item.actual}" class="editable-field ${editMode?'':'display-mode'} mono" ${editMode?'':'readonly'} onchange="updateBudgetItem(${i},'actual',parseInt(this.value))" style="width:120px;"/>원</td><td class="mono" style="color:${diffColor};font-weight:600;">${diffText}</td><td><input type="text" value="${item.note}" class="editable-field ${editMode?'':'display-mode'}" ${editMode?'':'readonly'} onchange="updateBudgetItem(${i},'note',this.value)"/></td><td class="${editMode?'':'hidden'}"><button class="delete-row-btn" onclick="deleteBudgetItem(${i})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button></td>`;
     tbody.appendChild(tr);
   });
   updateBudgetSummary(); updateBudgetChart(); updateOverviewBudget();
@@ -1710,23 +1527,11 @@ document.getElementById('totalBudget')?.addEventListener('input',()=>{ updateBud
 // ══════════════════════════════════════════
 //  CHARTS
 // ══════════════════════════════════════════
-
-// ③ Monthly progress chart — 3월~12월, all milestones per month
 function buildProgressChartData(){
-  // For each month (3..12), collect all milestone items that overlap
   const datasets=[];
   const colors=['rgba(99,102,241,.8)','rgba(249,115,22,.8)','rgba(16,185,129,.8)','rgba(251,191,36,.8)','rgba(236,72,153,.8)','rgba(14,165,233,.8)','rgba(168,85,247,.8)','rgba(239,68,68,.8)'];
-
   appData.milestones.forEach((ms,idx)=>{
-    const data=MONTH_NUMS.map(mNum=>{
-      // parse period like "03/01 - 05/31"
-      const match=ms.period.match(/(\d{2})\/\d{2}\s*-\s*(\d{2})\/\d{2}/);
-      if(match){
-        const sm=parseInt(match[1]), em=parseInt(match[2]), m=parseInt(mNum);
-        if(m>=sm && m<=em) return ms.progress;
-      }
-      return null;
-    });
+    const data=MONTH_NUMS.map(mNum=>{ const match=ms.period.match(/(\d{2})\/\d{2}\s*-\s*(\d{2})\/\d{2}/); if(match){const sm=parseInt(match[1]),em=parseInt(match[2]),m=parseInt(mNum); if(m>=sm && m<=em) return ms.progress;} return null; });
     datasets.push({label:ms.task.length>15?ms.task.substring(0,15)+'…':ms.task, data, backgroundColor:colors[idx%colors.length], borderColor:colors[idx%colors.length].replace('.8','1'), borderWidth:2, borderRadius:4, spanGaps:false});
   });
   return { labels:MONTHS, datasets };
@@ -1736,72 +1541,37 @@ function initProgressChart(){
   const ctx=document.getElementById('progressChart'); if(!ctx) return;
   const d=buildProgressChartData();
   if(progressChartInstance) progressChartInstance.destroy();
-  progressChartInstance=new Chart(ctx,{
-    type:'bar',
-    data:d,
-    options:{
-      responsive:true,maintainAspectRatio:true,
-      plugins:{legend:{position:'top',labels:{font:{family:'Noto Sans KR',size:11},boxWidth:12}},
-        tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y}%`}}},
-      scales:{
-        y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%',font:{family:'Noto Sans KR'}}},
-        x:{ticks:{font:{family:'Noto Sans KR'}}}
-      }
-    }
-  });
+  progressChartInstance=new Chart(ctx,{type:'bar',data:d,options:{responsive:true,maintainAspectRatio:true,plugins:{legend:{position:'top',labels:{font:{family:'Noto Sans KR',size:11},boxWidth:12}},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${c.parsed.y}%`}}},scales:{y:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%',font:{family:'Noto Sans KR'}}},x:{ticks:{font:{family:'Noto Sans KR'}}}}}});
 }
 
 function updateProgressChart(){
   if(!progressChartInstance){ initProgressChart(); return; }
   const d=buildProgressChartData();
   if(!d || !d.labels || d.labels.length === 0) return;
-  progressChartInstance.data=d;
-  progressChartInstance.update();
+  progressChartInstance.data=d; progressChartInstance.update();
 }
 
-// ④ Plan chart — horizontal bar (이행률)
 function initPlanChart(){
   const ctx=document.getElementById('planChart'); if(!ctx) return;
   const chartData = getPlanChartData();
   if(!chartData || !chartData.labels || chartData.labels.length === 0) return;
   const { labels, data, colors } = chartData;
   if(planChartInstance) planChartInstance.destroy();
-  planChartInstance=new Chart(ctx,{
-    type:'bar',
-    data:{ labels, datasets:[{ label:'이행률 (%)', data, backgroundColor:colors, borderColor:colors.map(c=>c.replace('.85','1')), borderWidth:2, borderRadius:6 }]},
-    options:{
-      indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{display:false}, tooltip:{callbacks:{label:c=>`${c.parsed.x}%`}}},
-      scales:{
-        x:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%',font:{family:'Noto Sans KR'}}},
-        y:{ticks:{font:{family:'Noto Sans KR',size:12}}}
-      }
-    }
-  });
+  planChartInstance=new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'이행률 (%)',data,backgroundColor:colors,borderColor:colors.map(c=>c.replace('.85','1')),borderWidth:2,borderRadius:6}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.parsed.x}%`}}},scales:{x:{beginAtZero:true,max:100,ticks:{callback:v=>v+'%',font:{family:'Noto Sans KR'}}},y:{ticks:{font:{family:'Noto Sans KR',size:12}}}}}});
   ctx.parentElement.style.height = Math.max(200, appData.planItems.length*48+60)+'px';
 }
 
-function getPlanChartData(){
-  const labels=appData.planItems.map(p=>p.name.length>18?p.name.substring(0,18)+'…':p.name);
-  const data=appData.planItems.map(p=>p.progress);
-  const colors=appData.planItems.map((_,i)=>CHART_COLORS[i%CHART_COLORS.length]);
-  return {labels,data,colors};
-}
+function getPlanChartData(){ return {labels:appData.planItems.map(p=>p.name.length>18?p.name.substring(0,18)+'…':p.name),data:appData.planItems.map(p=>p.progress),colors:appData.planItems.map((_,i)=>CHART_COLORS[i%CHART_COLORS.length])}; }
 
 function updatePlanChart(){
   if(!planChartInstance){ initPlanChart(); return; }
   const chartData = getPlanChartData();
   if(!chartData || !chartData.labels || chartData.labels.length === 0) return;
   const {labels,data,colors}=chartData;
-  planChartInstance.data.labels=labels;
-  planChartInstance.data.datasets[0].data=data;
-  planChartInstance.data.datasets[0].backgroundColor=colors;
-  planChartInstance.update();
-  const ctx=document.getElementById('planChart');
-  if(ctx) ctx.parentElement.style.height=Math.max(200,appData.planItems.length*48+60)+'px';
+  planChartInstance.data.labels=labels; planChartInstance.data.datasets[0].data=data; planChartInstance.data.datasets[0].backgroundColor=colors; planChartInstance.update();
+  const ctx=document.getElementById('planChart'); if(ctx) ctx.parentElement.style.height=Math.max(200,appData.planItems.length*48+60)+'px';
 }
 
-// Budget chart
 function initBudgetChart(){
   const ctx=document.getElementById('budgetChart'); if(!ctx) return;
   const {labels,data}=getBudgetChartData();
@@ -1845,9 +1615,7 @@ const LOGIN_ID = 'mecha2026';
 const LOGIN_PW = '1234';
 const SESSION_KEY = 'ntx_auth';
 
-function checkSession(){
-  return sessionStorage.getItem(SESSION_KEY) === 'ok';
-}
+function checkSession(){ return sessionStorage.getItem(SESSION_KEY) === 'ok'; }
 
 function doLogin(){
   const id = document.getElementById('loginId').value.trim();
@@ -1855,45 +1623,24 @@ function doLogin(){
   const errEl = document.getElementById('loginError');
   const idInput = document.getElementById('loginId');
   const pwInput = document.getElementById('loginPw');
-
-  idInput.classList.remove('error');
-  pwInput.classList.remove('error');
-  errEl.classList.remove('show');
-
+  idInput.classList.remove('error'); pwInput.classList.remove('error'); errEl.classList.remove('show');
   if(id === LOGIN_ID && pw === LOGIN_PW){
     sessionStorage.setItem(SESSION_KEY, 'ok');
     const overlay = document.getElementById('loginOverlay');
     overlay.style.animation = 'slideOut .3s ease-out';
     setTimeout(()=>{ overlay.classList.add('hidden'); }, 280);
   } else {
-    idInput.classList.add('error');
-    pwInput.classList.add('error');
-    errEl.classList.add('show');
-    pwInput.value = '';
-    pwInput.focus();
+    idInput.classList.add('error'); pwInput.classList.add('error'); errEl.classList.add('show');
+    pwInput.value = ''; pwInput.focus();
   }
 }
 
 document.addEventListener('DOMContentLoaded', function(){
-  // 모바일 메뉴 토글
   const mobileMenuBtn = document.getElementById('mobileMenuBtn');
   const sidebarNav = document.getElementById('sidebarNav');
-  if(mobileMenuBtn && sidebarNav){
-    mobileMenuBtn.onclick = () => sidebarNav.classList.toggle('show');
-  }
-
-  // Enter 키 로그인 지원
-  ['loginId','loginPw'].forEach(id=>{
-    document.getElementById(id).addEventListener('keydown', function(e){
-      if(e.key === 'Enter') doLogin();
-    });
-  });
-
-  if(checkSession()){
-    document.getElementById('loginOverlay').classList.add('hidden');
-  } else {
-    document.getElementById('loginId').focus();
-  }
+  if(mobileMenuBtn && sidebarNav){ mobileMenuBtn.onclick = () => sidebarNav.classList.toggle('show'); }
+  ['loginId','loginPw'].forEach(id=>{ document.getElementById(id).addEventListener('keydown', function(e){ if(e.key === 'Enter') doLogin(); }); });
+  if(checkSession()){ document.getElementById('loginOverlay').classList.add('hidden'); } else { document.getElementById('loginId').focus(); }
 });
 
 document.addEventListener('DOMContentLoaded', init);
