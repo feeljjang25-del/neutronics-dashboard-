@@ -972,6 +972,7 @@ let isFirstLoad = true;
 function loadData(){
   const dataRef = window.fbRef(window.fbDB, 'neutronics_v5');
   window.fbOnValue(dataRef, (snapshot) => {
+    try {
     const data = snapshot.val();
     if(data) {
       appData = data;
@@ -997,11 +998,25 @@ function loadData(){
     } else {
       console.log('Firebase에 데이터 없음 → 기본 데이터 사용');
       // 기본 데이터로 초기 렌더링
+      loadDataFromAppData();
       renderTeam(); renderAllTeamTable(); renderMeetingsFolders(); updateCategoryCounts();
       renderMilestones(); renderPlanItems(); renderBudget(); renderCustomMenus();
       updateProgress(); updateBudgetSummary(); updateOverviewBudget();
       initProgressChart(); initPlanChart(); initBudgetChart();
       isFirstLoad = false;
+    }
+    } catch(err) {
+      console.error('❌ 데이터 로드 중 오류:', err);
+      showToast('데이터 로드 오류: ' + err.message, 'error');
+      // 오류가 발생해도 기본 렌더링 시도
+      try {
+        loadDataFromAppData();
+        renderTeam(); renderAllTeamTable(); renderMeetingsFolders(); updateCategoryCounts();
+        renderMilestones(); renderPlanItems(); renderBudget(); renderCustomMenus();
+        updateProgress(); updateBudgetSummary(); updateOverviewBudget();
+        initProgressChart(); initPlanChart(); initBudgetChart();
+        isFirstLoad = false;
+      } catch(e2) { console.error('❌ 복구 렌더링도 실패:', e2); }
     }
   }, (error) => {
     console.error('Firebase 읽기 오류:', error);
@@ -1020,12 +1035,15 @@ function saveData(){
   const ov = appData.overview;
   ov.bannerTitle = document.getElementById('bannerTitle').textContent;
   ov.bannerDesc = document.getElementById('bannerDesc').textContent;
-  ov.progressValue = parseInt(document.getElementById('progressValue').value)||68;
+  // ✅ input이 비어있을 경우 기존 appData 값 유지 (기본값으로 덮어씌우기 방지)
+  const pvRaw = parseInt(document.getElementById('progressValue').value);
+  ov.progressValue = isNaN(pvRaw) ? (ov.progressValue ?? 68) : pvRaw;
   ov.progressSubtitle = document.getElementById('progressSubtitle').textContent;
   ov.teamDesc = document.getElementById('teamDesc').textContent;
   ov.milestoneValue = document.getElementById('milestoneValue').textContent;
   ov.milestoneDesc = document.getElementById('milestoneDesc').textContent;
-  appData.budget.total = parseInt(document.getElementById('totalBudget').value)||26000000;
+  const tbRaw = parseInt(document.getElementById('totalBudget').value);
+  appData.budget.total = isNaN(tbRaw) ? (appData.budget.total ?? 26000000) : tbRaw;
   if(currentMeetingIndex >= 0) saveMeetingDetail();
   appData.lastSaveDate = new Date().toLocaleString('ko-KR',{timeZone:'Asia/Seoul'});
   
@@ -1060,7 +1078,17 @@ function revertData(){
 }
 
 function loadDataFromAppData(){
+  // ✅ Firebase는 빈 배열을 null로 저장하므로 모든 필드 null 체크 필수
+  if(!appData.overview) appData.overview = JSON.parse(JSON.stringify(defaultData.overview));
+  if(!appData.team) appData.team = JSON.parse(JSON.stringify(defaultData.team));
+  if(!appData.meetings) appData.meetings = [];
+  if(!appData.milestones) appData.milestones = JSON.parse(JSON.stringify(defaultData.milestones));
   if(!appData.planItems) appData.planItems = JSON.parse(JSON.stringify(defaultData.planItems));
+  if(!appData.budget) appData.budget = JSON.parse(JSON.stringify(defaultData.budget));
+  if(!appData.budget.items) appData.budget.items = JSON.parse(JSON.stringify(defaultData.budget.items));
+  if(!appData.customMenus) appData.customMenus = [];
+  if(!appData.customSections) appData.customSections = {};
+
   appData.meetings.forEach(m => {
     if(!m.changes) m.changes='';
     if(!m.plan) m.plan='';
@@ -1078,13 +1106,13 @@ function loadDataFromAppData(){
   appData.team.forEach(t=>{ if(!t.photo) t.photo=''; if(!t.phone) t.phone=''; });
   const ov = appData.overview;
   if(ov){
-    document.getElementById('bannerTitle').textContent = ov.bannerTitle||'';
-    document.getElementById('bannerDesc').textContent = ov.bannerDesc||'';
-    document.getElementById('progressValue').value = ov.progressValue||68;
-    document.getElementById('progressSubtitle').textContent = ov.progressSubtitle||'';
-    document.getElementById('teamDesc').textContent = ov.teamDesc||'';
-    document.getElementById('milestoneValue').textContent = ov.milestoneValue||'3 / 5';
-    document.getElementById('milestoneDesc').textContent = ov.milestoneDesc||'';
+    document.getElementById('bannerTitle').textContent = ov.bannerTitle ?? defaultData.overview.bannerTitle;
+    document.getElementById('bannerDesc').textContent = ov.bannerDesc ?? defaultData.overview.bannerDesc;
+    document.getElementById('progressValue').value = ov.progressValue ?? 68;
+    document.getElementById('progressSubtitle').textContent = ov.progressSubtitle ?? defaultData.overview.progressSubtitle;
+    document.getElementById('teamDesc').textContent = ov.teamDesc ?? defaultData.overview.teamDesc;
+    document.getElementById('milestoneValue').textContent = ov.milestoneValue ?? defaultData.overview.milestoneValue;
+    document.getElementById('milestoneDesc').textContent = ov.milestoneDesc ?? defaultData.overview.milestoneDesc;
     updateProgress();
   }
   if(appData.budget){ document.getElementById('totalBudget').value = appData.budget.total; updateBudgetSummary(); }
@@ -1504,7 +1532,7 @@ function addBudgetItem(){ appData.budget.items.push({category:'새 항목',plann
 function updateBudgetItem(i,field,value){ appData.budget.items[i][field]=value; renderBudget(); saveData(); }
 function deleteBudgetItem(i){ if(!confirm('삭제?'))return; appData.budget.items.splice(i,1); renderBudget(); saveData(); showToast('삭제됨','success'); }
 function updateBudgetSummary(){
-  const total=parseInt(document.getElementById('totalBudget').value)||appData.budget.total;
+  const total = parseInt(document.getElementById('totalBudget').value) || (appData.budget?.total ?? 26000000);
   const spent=appData.budget.items.reduce((s,it)=>s+(it.actual||0),0);
   const rem=total-spent, pct=total>0?Math.round((rem/total)*100):0;
   document.getElementById('spentBudget').textContent=spent.toLocaleString();
@@ -1513,7 +1541,7 @@ function updateBudgetSummary(){
   const disp=document.getElementById('totalBudgetDisplay'); if(disp) disp.textContent=total.toLocaleString();
 }
 function updateOverviewBudget(){
-  const total=parseInt(document.getElementById('totalBudget').value)||appData.budget.total;
+  const total = parseInt(document.getElementById('totalBudget').value) || (appData.budget?.total ?? 26000000);
   const spent=appData.budget.items.reduce((s,it)=>s+(it.actual||0),0);
   const rem=total-spent, pct=total>0?Math.round((rem/total)*100):0;
   document.getElementById('overviewRemainingBudget').textContent=rem.toLocaleString()+'원';
@@ -1592,6 +1620,7 @@ function deleteCustomMenu(id){ if(!confirm('삭제?'))return; appData.customMenu
 function renderCustomMenus(){
   const container=document.getElementById('navItemsContainer'); container.querySelectorAll('.custom-menu-item').forEach(el=>el.remove());
   const contentArea=document.querySelector('.container'); contentArea.querySelectorAll('.custom-section').forEach(el=>el.remove());
+  appData.customMenus = appData.customMenus || [];
   appData.customMenus.forEach(menu=>{
     const item=document.createElement('div'); item.className='nav-item custom-menu-item'; item.dataset.section=menu.id; item.onclick=()=>showSection(menu.id,item);
     item.innerHTML=`<svg viewBox="0 0 24 24" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg><span>${menu.name}</span>${editMode?`<div class="delete-btn" onclick="event.stopPropagation();deleteCustomMenu('${menu.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></div>`:''}`;
